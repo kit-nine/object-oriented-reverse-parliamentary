@@ -1,22 +1,22 @@
 import random
 
 # ADDITIONAL NOTES
-#   - two executives
+# → - two executives
 #   - a set amount of laws per generation - manual input or a set amount can be built in
-#   - go through entire legislative process rather than just simple voting
-#   - full political compass; left-right and libertarian-authoritarian (array)
-#   - get rid of global variables
-#   - object-oriented legislature
-#   - the parents will survive 1 generation.
+# → - go through entire legislative process rather than just simple voting
+# → - full political compass; left-right and libertarian-authoritarian (array)
+# → - get rid of global variables
+# → - object-oriented legislature
+# → - the parents will survive 1 generation.
 #   - media influence can skew the voting by a certain amount - manual input
-#   - law creation is skewed toward the position of the legislative, not just random from their side
+# → - law creation is skewed toward the position of the legislative, not just random from their side
 #   - VP instead of a randint for the tiebreaker
-#   - if there are not 100 candidates for each position, the number a voter chooses will change into that of the candidate with the smallest absolute difference from the original vote. If multiple share the same absolute difference, the voter will choose randomly (plus media influence) from the multiple.
-#   - reproduction is yearly, for simplicity of elections
+# → - reproduction is yearly, for simplicity of elections
 
 # variables
 voters = []
 year = 0
+day = 1
 new_voters = []
 old_voters = []
 # CONSTANTS
@@ -24,7 +24,7 @@ VOTERS_PER_STATE = 200 # Default: 200
 STATES = {0:"AK",1:"AL",2:"AR",3:"AZ",4:"CA",5:"CO",6:"CT",7:"DE",8:"FL",9:"GA",10:"HI",11:"IA",12:"ID",13:"IL",14:"IN",15:"KS",16:"KY",17:"LA",18:"MA",19:"MD",20:"ME",21:"MI",22:"MN",23:"MO",24:"MS",25:"MT",26:"NC",27:"ND",28:"NE",29:"NH",30:"NJ",31:"NM",32:"NV",33:"NY",34:"OH",35:"OK",36:"OR",37:"PA",38:"RI",39:"SC",40:"SD",41:"TN",42:"TX",43:"UT",44:"VA",45:"VT",46:"WA",47:"WI",48:"WV",49:"WY"}
 REPS_PER_STATE = {"AK":1,"AL":7,"AR":4,"AZ":9,"CA":53,"CO":7,"CT":5,"DE":1,"FL":27,"GA":14,"HI":2,"IA":4,"ID":2,"IL":18,"IN":9,"KS":4,"KY":6,"LA":6,"MA":9,"MD":8,"ME":2,"MI":14,"MN":8,"MO":8,"MS":4,"MT":1,"NC":13,"ND":1,"NE":3,"NH":2,"NJ":12,"NM":3,"NV":4,"NY":27,"OH":16,"OK":5,"OR":5,"PA":18,"RI":2,"SC":7,"SD":1,"TN":9,"TX":36,"UT":4,"VA":11,"VT":1,"WA":10,"WI":8,"WV":3,"WY":1}
 FULL_COMPASS_TO_CORNER = {1:1,2:1,6:1,7:1,3:2,4:2,8:2,9:2,5:3,26:3,10:3,31:3,27:4,28:4,32:4,33:4,29:5,30:5,34:5,35:5,11:6,12:6,16:6,17:6,13:7,14:7,18:7,19:7,15:8,36:8,20:8,41:8,37:9,38:9,42:9,43:9,39:10,40:10,44:10,45:10,21:11,22:11,51:11,52:11,23:12,24:12,53:12,54:12,25:13,46:13,55:13,76:13,47:14,48:14,77:14,78:14,49:15,50:15,79:15,80:15,56:16,57:16,61:16,62:16,58:17,59:17,63:17,64:17,60:18,81:18,65:18,86:18,82:19,83:19,87:19,88:19,84:20,85:20,89:20,90:20,66:21,67:21,71:21,72:21,68:22,69:22,73:22,74:22,70:23,91:23,75:23,96:23,92:24,93:24,97:24,98:24,94:25,95:25,99:25,100:25}
-RUNTIME = 6
+RUNTIME = 10
 # Classes
 # Voter class
 class Voter: # The voter class will have methods of voting for the position for the legislature, voting for the executive, and reproduction 
@@ -76,7 +76,7 @@ class Legislator: # The legislator class will have methods of breaking a tie in 
             S = Bill(bill_pos ,self.chamber, last_number + 1)
             return S
     def committee_vote(self, bill):
-        if random.randint(1,100) < 93 and abs(bill.bill_pos - self.pos) <= 10: committee_vote = 1
+        if random.randint(1,100) < 93 and abs(bill.pos - self.pos) <= 10: committee_vote = 1
         else: committee_vote = 0
         return committee_vote
     def debate(self, bill):
@@ -86,8 +86,11 @@ class Legislator: # The legislator class will have methods of breaking a tie in 
             bill.pos += self.pos - bill.pos
     def vote_on_final_bill(self, bill):
         pass
-    def veto_override(self):
-        pass
+    def override(self, bill):
+        if abs(bill.pos - self.pos) > 25:
+            return False
+        else:
+            return True
     def send_bill(self):
         pass
     # only reps
@@ -101,24 +104,30 @@ class Legislator: # The legislator class will have methods of breaking a tie in 
 class Bill: # The Bill class will have certain properties, but no methods.
     def __init__(self, pos, chamber, number):
         self.created_by = chamber
-        if self.chamber == "house": self.designation = ("H." + str(number))
-        if self.chamber == "senate": self.designation = ("S." + str(number))
+        if self.created_by == "house": self.designation = ("H." + str(number))
+        if self.created_by == "senate": self.designation = ("S." + str(number))
         self.pos = pos
         self.alive = True
+        self.passed = False
 # Executive class
 class Executive: # The executive class will have methods of signing bills into law, vetoing and sending the bill back to congress, and pocket vetoing.
     def __init__(self, pos):
         self.pos = pos
-    def sign_bill():
-        pass
-    def veto():
-        pass
+        if self.pos < 26: self.corner = "AL"
+        if self.pos > 25 and self.pos < 51: self.corner = "AR"
+        if self.pos > 50 and self.pos < 76: self.corner = "LL"
+        if self.pos > 75: self.corner = "LR"
+    def sign_bill(self, bill):
+        bill.passed = True
+    def veto(self, bill):
+        bill.alive == False
     def pocket_veto():
         pass
-# Judiciary class
-class Judiciary: # The Judiciary class will have methods of declaring laws constitutional and declaring laws unconstitutional.
-    def __init__():
-        pass
+# Justice class
+class Justice: # The Justice class will have methods of declaring laws constitutional and declaring laws unconstitutional.
+    def __init__(self, pos, bias):
+        self.pos = pos
+        self.bias = bias
     def declare_constitutional():
         pass
     def declare_unconstitutional():
@@ -239,10 +248,9 @@ def avg_pos(chamber_positions):
     if chamber_avg_pos > 75 and chamber_avg_pos <= 100: leg_corner = "LR"
     return chamber_avg_pos, leg_corner
 # voting for the contra domus
-def c_d_voting(voters, h_o_r_positions, h_o_r_members):
+def c_d_voting(voters, h_o_r_members, h_o_r_pos, h_o_r_corner):
     c_d_votes = []
     c_d_counts = [0]
-    h_o_r_pos, h_o_r_corner = avg_pos(h_o_r_positions)
     for i in voters:
         i.exe_voting(h_o_r_corner, h_o_r_pos)
         c_d_votes.append(i.exe_vote)
@@ -253,12 +261,11 @@ def c_d_voting(voters, h_o_r_positions, h_o_r_members):
         c_d_max_indices = exe_tiebreaker(c_d_max_indices, h_o_r_members)
     c_d_pos = c_d_max_indices[0]
     contra_domus = Executive(c_d_pos)
-    return contra_domus, c_d_pos, h_o_r_pos
+    return contra_domus, c_d_pos
 # voting for the contrum senatum
-def c_s_voting(voters, senate_positions, senate_members):
+def c_s_voting(voters, senate_members, senate_pos, senate_corner):
     c_s_votes = []
     c_s_counts = [0]
-    senate_pos, senate_corner = avg_pos(senate_positions)
     for i in voters:
         i.exe_voting(senate_corner, senate_pos)
         c_s_votes.append(i.exe_vote)
@@ -269,7 +276,48 @@ def c_s_voting(voters, senate_positions, senate_members):
         c_s_max_indices = exe_tiebreaker(c_s_max_indices, senate_members)
     c_s_pos = c_s_max_indices[0]
     contrum_senatum = Executive(c_s_pos)
-    return contrum_senatum, c_s_pos, senate_pos
+    return contrum_senatum, c_s_pos
+# the CD chooses 4 of the nine justices
+justices = []
+def c_d_jchoice(executive):
+    global justices
+    for i in range(4):
+        bias = random.randint(1,5)
+        if executive.corner == "AL": jpos = 25 - bias
+        if executive.corner == "AR": jpos = 46 - bias
+        if executive.corner == "LL": jpos = 55 + bias
+        if executive.corner == "LR": jpos = 76 + bias
+        justice = Justice(jpos, bias)
+        justices.append(justice)
+# the CS chooses 4 of the nine justices
+def c_s_jchoice(executive):
+    global justices
+    for i in range(4):
+        bias = random.randint(1,5)
+        if executive.corner == "AL": jpos = 25 - bias
+        if executive.corner == "AR": jpos = 46 - bias
+        if executive.corner == "LL": jpos = 55 + bias
+        if executive.corner == "LR": jpos = 76 + bias
+        justice = Justice(jpos, bias)
+        justices.append(justice)
+# the CS and CD have to agree on the position of the final justice
+def combined_jchoice(CD, CS):
+    global justices
+    bias = random.randint(1,5)
+    if CD.corner == "AL": jpos = 25 - bias
+    if CD.corner == "AR": jpos = 46 - bias
+    if CD.corner == "LL": jpos = 55 + bias
+    if CD.corner == "LR": jpos = 76 + bias
+    CDjustice = Justice(jpos, bias)
+    bias = random.randint(1,5)
+    if CS.corner == "AL": jpos = 25 - bias
+    if CS.corner == "AR": jpos = 46 - bias
+    if CS.corner == "LL": jpos = 55 + bias
+    if CS.corner == "LR": jpos = 76 + bias
+    CSjustice = Justice(jpos, bias)
+    justice = Justice(int((CSjustice.pos + CDjustice.pos) / 2), int((CDjustice.bias + CSjustice.bias) / 2))
+    justices.append(justice)
+
 # lawmaking
 def congress_lawmaking(congress_members, h_o_r_members, senate_members):
     last_number = 0
@@ -277,50 +325,123 @@ def congress_lawmaking(congress_members, h_o_r_members, senate_members):
     house_votes = []
     senate_votes = []
     final_votes = []
-    while day <= 365:
-        bill = congress_members[random.randint(len(congress_members))].introduce_bill(last_number)
-        original_bill_pos =  bill.pos
-        committee_center = random.randint(len(congress_members))
-        for i in range(-2, 2):
-            committee_votes.append(congress_members[committee_center + i].committee_vote(bill))
-        for i in committee_votes:
-            sum_vote += i
-        if sum_vote / 5 < 0.5:
-            bill.alive = False
-        if bill.alive == True:
-            if random.randint(0,6) < 4:
-                for i in h_o_r_members:
-                    i.debate(bill)
-            else: supermajority = True
+    sum_vote = 0
+    bill = congress_members[random.randint(1,len(congress_members)-1)].introduce_bill(last_number)
+    original_bill_pos =  bill.pos
+    committee_center = random.randint(2,len(congress_members)-2)
+    for i in range(-2, 2):
+        committee_votes.append(congress_members[committee_center + i].committee_vote(bill))
+    for i in committee_votes:
+        sum_vote += i
+    if sum_vote / 5 < 0.5:
+        bill.alive = False
+    if bill.alive == True:
+        house_bill_pos = 0
+        senate_bill_pos = 0
+        if random.randint(0,6) < 4:
             for i in h_o_r_members:
-                if abs(bill.pos - i.pos) > 10:
-                    house_votes.append(False)
-                else:
-                    house_votes.append(True)
-            if max(house_votes) == False: bill.alive = False
-            if supermajority == True and round(house_votes.len()/house_votes.count(True), 2) < 0.67: bill.alive = False
-            if bill.alive == True:
-                house_bill_pos = bill.pos
-                bill.pos = original_bill_pos
-            if random.randint(0,6) < 4:
-                for i in senate_members:
-                    i.debate(bill)
-            else: supermajority = True
+                i.debate(bill)
+            supermajority = False
+        else: supermajority = True
+        for i in h_o_r_members:
+            if abs(bill.pos - i.pos) > 10:
+                house_votes.append(False)
+            else:
+                house_votes.append(True)
+        if max(house_votes) == False: bill.alive = False
+        if supermajority == True and round(len(house_votes)/house_votes.count(True), 2) < 0.67: bill.alive = False
+        if bill.alive == True:
+            house_bill_pos = bill.pos
+            bill.pos = original_bill_pos
+        if random.randint(0,6) < 4:
             for i in senate_members:
-                if abs(bill.pos - i.pos) > 10:
-                    senate_votes.append(False)
-                else:
-                    senate_votes.append(True)
-            if max(senate_votes) == False: bill.alive = False
-            if supermajority == True and round(senate_votes.len()/senate_votes.count(True), 2) < 0.67: bill.alive = False
-            if bill.alive == True:
-                senate_bill_pos = bill.pos
-                bill.pos = original_bill_pos
+                i.debate(bill)
+        else: supermajority = True
+        for i in senate_members:
+            if abs(bill.pos - i.pos) > 10:
+                senate_votes.append(False)
+            else:
+                senate_votes.append(True)
+        if max(senate_votes) == False: bill.alive = False
+        if senate_votes.count(True) > 0:
+            if supermajority == True and round(len(senate_votes)/senate_votes.count(True), 2) < 0.67: bill.alive = False
+        if bill.alive == True:
+            senate_bill_pos = bill.pos
+            bill.pos = original_bill_pos
+        if house_bill_pos != 0 and senate_bill_pos != 0:
             bill.pos = int(house_bill_pos + senate_bill_pos / 2)
+        elif house_bill_pos == 0:
+            bill.pos = senate_bill_pos
+        elif senate_bill_pos == 0:
+            bill.pos = house_bill_pos
+        for i in congress_members:
+            final_votes.append(i.vote_on_final_bill(bill))
+    return bill
+
+def executive_lawmaking(executive, bill):
+    if abs(bill.pos - executive.pos) > 25:
+        executive.veto(bill)
+    else:
+        executive.sign_bill(bill)
+    return bill
+    
+def congress_override(bill, congress_members):
+    congress_pos = 0
+    override_votes = []
+    for i in congress_members:
+        congress_pos += i.pos
+    congress_pos /= len(congress_members)
+    if abs(bill.pos - congress_pos) < 10:
+        if random.randint(1,1000) > 994:
             for i in congress_members:
-                final_votes.append(i.vote_on_final_bill(bill))
-        day += 1
+                override_votes.append(i.override(bill))
+            if int(override_votes.count(True) / len(override_votes) * 10) >= 6:
+                bill.alive = True
+    return bill
+
+def judicial_review(bill):
+    pass
+congress_members = []
+generate_gen1_voters(voters)
+if year % 2 == 0:
+    h_o_r_positions, h_o_r_members = h_o_r_voting(voters)
+    h_o_r_pos, h_o_r_corner = avg_pos(h_o_r_positions)
+    h_o_r_status = "H.O.R. Average Position:" + str(h_o_r_pos) + "\nH.O.R. Corner:" + str(h_o_r_corner)
+    print(h_o_r_status)
+if year % 6 == 0:
+    senate_positions, senate_members = senate_voting(voters)
+    senate_pos, senate_corner = avg_pos(senate_positions)
+    senate_status = "Senate Average Position:" + str(senate_pos) + "\nSenate Corner:" + str(senate_corner)
+    print(senate_status)
+if year % 4 == 0:
+    contra_domus, c_d_pos = c_d_voting(voters, h_o_r_members, h_o_r_pos, h_o_r_corner)
+    contrum_senatum, c_s_pos = c_s_voting(voters, senate_members, senate_pos, senate_corner)
+    c_d_jchoice(contra_domus)
+    c_s_jchoice(contrum_senatum)
+    combined_jchoice(contra_domus, contrum_senatum)
+    executive_status = "C.D. Position:" + str(c_d_pos) + "\nC.S. Position:" + str(c_s_pos)
+    print(executive_status)
+for i in h_o_r_members:
+    congress_members.append(i)
+for i in senate_members:
+    congress_members.append(i)
+justice_bias = []
+judicial_bias = 0
+for i in justices:
+    justice_bias.append(i.bias)
+    judicial_bias += i.bias
+judicial_status = "Judicial Biases, Separate:", justice_bias, "\nOverall Judicial Bias:", judicial_bias / 9
+print(judicial_status)
+while year <= RUNTIME:
+    bill = congress_lawmaking(congress_members, h_o_r_members, senate_members)
+    if bill.alive == True: bill = executive_lawmaking(contra_domus, bill)
+    if bill.alive == False: bill = congress_override(bill, congress_members)
+    if bill.alive == True: bill = judicial_review(bill)
+    day += 1
+    daily_status = "Bill Position:" + str(bill.pos)
+    if bill.alive == True: daily_status += "----- This bill became a law."
+    print(daily_status)
     if day == 365:
-        day = 0
+        day = 1
         year += 1
-# testing
+        print("Year", year)
