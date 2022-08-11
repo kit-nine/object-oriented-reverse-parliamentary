@@ -63,15 +63,28 @@ class Legislator: # The legislator class will have methods of breaking a tie in 
         self.pos = pos
         self.exe_tiebreaker_vote = 0
         self.chamber = chamber
-    def introduce_bill(self):
-        pass
-    def subcommittee_vote(self):
-        pass
-    def committee_vote(self):
-        pass
-    def schedule_bill(self):
-        pass
-    def debate(self):
+    def introduce_bill(self, last_number):
+        chance = random.randint(1,100)
+        if chance < 93:
+            bill_pos = self.pos
+        else:
+            bill_pos = random.randint(1,100)
+        if self.chamber == "house":
+            H = Bill(bill_pos ,self.chamber, last_number + 1)
+            return H
+        elif self.chamber == "senate":
+            S = Bill(bill_pos ,self.chamber, last_number + 1)
+            return S
+    def committee_vote(self, bill):
+        if random.randint(1,100) < 93 and abs(bill.bill_pos - self.pos) <= 10: committee_vote = 1
+        else: committee_vote = 0
+        return committee_vote
+    def debate(self, bill):
+        if abs(bill.pos-self.pos) > 10:
+            bill.pos -= self.pos - bill.pos
+        else:
+            bill.pos += self.pos - bill.pos
+    def vote_on_final_bill(self, bill):
         pass
     def veto_override(self):
         pass
@@ -84,13 +97,14 @@ class Legislator: # The legislator class will have methods of breaking a tie in 
             if abs(i-self.pos) < diff:
                 diff = abs(i-self.pos)
                 self.exe_tiebreaker_vote = i
-    # only senators
-    def filibuster():
-        pass
-    def envoke_closure():
-        pass
-    def conference_committee_meeting():
-        pass
+#Bill class
+class Bill: # The Bill class will have certain properties, but no methods.
+    def __init__(self, pos, chamber, number):
+        self.created_by = chamber
+        if self.chamber == "house": self.designation = ("H." + str(number))
+        if self.chamber == "senate": self.designation = ("S." + str(number))
+        self.pos = pos
+        self.alive = True
 # Executive class
 class Executive: # The executive class will have methods of signing bills into law, vetoing and sending the bill back to congress, and pocket vetoing.
     def __init__(self, pos):
@@ -256,18 +270,57 @@ def c_s_voting(voters, senate_positions, senate_members):
     c_s_pos = c_s_max_indices[0]
     contrum_senatum = Executive(c_s_pos)
     return contrum_senatum, c_s_pos, senate_pos
+# lawmaking
+def congress_lawmaking(congress_members, h_o_r_members, senate_members):
+    last_number = 0
+    committee_votes = []
+    house_votes = []
+    senate_votes = []
+    final_votes = []
+    while day <= 365:
+        bill = congress_members[random.randint(len(congress_members))].introduce_bill(last_number)
+        original_bill_pos =  bill.pos
+        committee_center = random.randint(len(congress_members))
+        for i in range(-2, 2):
+            committee_votes.append(congress_members[committee_center + i].committee_vote(bill))
+        for i in committee_votes:
+            sum_vote += i
+        if sum_vote / 5 < 0.5:
+            bill.alive = False
+        if bill.alive == True:
+            if random.randint(0,6) < 4:
+                for i in h_o_r_members:
+                    i.debate(bill)
+            else: supermajority = True
+            for i in h_o_r_members:
+                if abs(bill.pos - i.pos) > 10:
+                    house_votes.append(False)
+                else:
+                    house_votes.append(True)
+            if max(house_votes) == False: bill.alive = False
+            if supermajority == True and round(house_votes.len()/house_votes.count(True), 2) < 0.67: bill.alive = False
+            if bill.alive == True:
+                house_bill_pos = bill.pos
+                bill.pos = original_bill_pos
+            if random.randint(0,6) < 4:
+                for i in senate_members:
+                    i.debate(bill)
+            else: supermajority = True
+            for i in senate_members:
+                if abs(bill.pos - i.pos) > 10:
+                    senate_votes.append(False)
+                else:
+                    senate_votes.append(True)
+            if max(senate_votes) == False: bill.alive = False
+            if supermajority == True and round(senate_votes.len()/senate_votes.count(True), 2) < 0.67: bill.alive = False
+            if bill.alive == True:
+                senate_bill_pos = bill.pos
+                bill.pos = original_bill_pos
+            bill.pos = int(house_bill_pos + senate_bill_pos / 2)
+            for i in congress_members:
+                final_votes.append(i.vote_on_final_bill(bill))
+        day += 1
+    if day == 365:
+        day = 0
+        year += 1
 # testing
-generate_gen1_voters(voters)
-for i in range(RUNTIME):
-    if year == 0 or year % 2 == 0:
-        h_o_r_positions, h_o_r_members = h_o_r_voting(voters)
-    if year == 0 or year % 6 == 0:
-        senate_positions, senate_members = senate_voting(voters)
-    if year == 0 or year % 4 == 0:
-        contra_domus, c_d_pos, h_o_r_pos = c_d_voting(voters, h_o_r_positions, h_o_r_members)
-        contrum_senatum, c_s_pos, senate_pos = c_s_voting(voters, senate_positions, senate_members)
-    year += 1
-    old_voters.clear()
-    for i in range(len(voters)):
-        new_voters.append(voters[i].reproduce())
-        old_voters.append(voters[i])
