@@ -1,4 +1,5 @@
 import random
+from types import NoneType
 
 # ADDITIONAL NOTES
 # → - two executives
@@ -109,6 +110,34 @@ class Bill: # The Bill class will have certain properties, but no methods.
         self.pos = pos
         self.alive = True
         self.passed = False
+        self.distance = 0
+        self.constitutionality = None
+        if self.pos < 26: self.corner = "AL"
+        if self.pos > 25 and self.pos < 51: self.corner = "AR"
+        if self.pos > 50 and self.pos < 76: self.corner = "LL"
+        if self.pos > 75: self.corner = "LR"
+    def determine_distance(self):
+        d1 = (25,46,76,55)
+        d2 = (24,20,41,47,77,81,60,54)
+        d3 = (23,19,15,36,42,48,78,82,86,65,59,53)
+        d4 = (22,18,14,10,31,37,43,49,79,83,87,91,70,64,58,52)
+        d5 = (21,17,13,9,5,26,32,38,44,50,80,84,88,92,96,75,69,63,57,51)
+        d6 = (16,12,8,4,27,33,39,45,85,89,93,97,74,68,62,56)
+        d7 = (11,7,3,28,34,40,90,94,98,73,67,61)
+        d8 = (6,2,29,35,95,99,72,66)
+        d9 = (1,30,100,71)
+        dlist = [d1,d2,d3,d4,d5,d6,d7,d8,d9]
+        percentages = {1:90, 2:80, 3:70, 4:60, 5:50, 6:40, 7:30, 8:20, 9:10}
+        for a in dlist:
+            templist = []
+            for b in a:
+                if self.pos == b:
+                    templist.append(True)
+                else:
+                    templist.append(False)
+            if any(templist) == True:
+                self.distance = dlist.index(a) + 1
+        return percentages
 # Executive class
 class Executive: # The executive class will have methods of signing bills into law, vetoing and sending the bill back to congress, and pocket vetoing.
     def __init__(self, pos):
@@ -128,10 +157,23 @@ class Justice: # The Justice class will have methods of declaring laws constitut
     def __init__(self, pos, bias):
         self.pos = pos
         self.bias = bias
-    def declare_constitutional():
-        pass
-    def declare_unconstitutional():
-        pass
+        self.vote = None
+        if self.pos < 26:
+            self.corner = "AL"
+            self.opp_corner = "LR"
+        if self.pos > 25 and self.pos < 51:
+            self.corner = "AR"
+            self.opp_corner = "LL"
+        if self.pos > 50 and self.pos < 76:
+            self.corner = "LL"
+            self.opp_corner = "AR"
+        if self.pos > 75:
+            self.corner = "LR"
+            self.opp_corner = "AL"
+    def declare_constitutional(bill):
+        bill.constitutionality = True
+    def declare_unconstitutional(bill):
+        bill.constitutionality = False
 
 # functions
 # used by Voter class only
@@ -399,8 +441,23 @@ def congress_override(bill, congress_members):
                 bill.alive = True
     return bill
 
-def judicial_review(bill):
-    pass
+def judicial_review(bill, justices, percentages):
+    votes = []
+    for i in justices:
+        if bill.corner == i.corner:
+            if random.randint(1,100) < percentages.get(bill.distance) + i.bias:
+                i.vote = True
+            else: i.vote = False
+        if bill.corner == i.opp_corner:
+            if random.randint(1,100) < percentages.get(bill.distance) - i.bias:
+                i.vote = True
+            else: i.vote = False
+        votes.append(i.vote)
+    if votes.count(True) > votes.count(False):
+        i.declare_constitutional()
+    else: i.declare_unconstitutional()
+    return bill
+
 congress_members = []
 generate_gen1_voters(voters)
 if year % 2 == 0:
@@ -432,14 +489,18 @@ for i in justices:
     judicial_bias += i.bias
 judicial_status = "Judicial Biases, Separate:", justice_bias, "\nOverall Judicial Bias:", judicial_bias / 9
 print(judicial_status)
+
 while year <= RUNTIME:
     bill = congress_lawmaking(congress_members, h_o_r_members, senate_members)
     if bill.alive == True: bill = executive_lawmaking(contra_domus, bill)
     if bill.alive == False: bill = congress_override(bill, congress_members)
-    if bill.alive == True: bill = judicial_review(bill)
+    percentages = bill.determine_distance()
+    if bill.alive == True: bill = judicial_review(bill, justices, percentages)
     day += 1
-    daily_status = "Bill Position:" + str(bill.pos)
-    if bill.alive == True: daily_status += "----- This bill became a law."
+    daily_status = "Bill Position:" + str(bill.pos) + "   Day:" + str(day)
+    if bill.alive == True and bill.constitutionality == True: daily_status += "----- This bill became a law."
+    elif bill.alive == False: daily_status += "----- This bill was killed before its constitutionality was determined."
+    elif bill.constitutionality == False: daily_status += "----- This bill was unconstitutional."
     print(daily_status)
     if day == 365:
         day = 1
