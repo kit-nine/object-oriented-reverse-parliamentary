@@ -81,20 +81,18 @@ class Legislator: # The legislator class will have methods of breaking a tie in 
         if random.randint(1,100) < 93 and abs(bill.pos - self.pos) <= 10: committee_vote = 1
         else: committee_vote = 0
         return committee_vote
+    def vote_on_final_bill(self, bill):
+        if abs(bill.pos - self.pos)
     def debate(self, bill):
         if abs(bill.pos-self.pos) > 10:
             bill.pos -= self.pos - bill.pos
         else:
             bill.pos += self.pos - bill.pos
-    def vote_on_final_bill(self, bill):
-        pass
     def override(self, bill):
         if abs(bill.pos - self.pos) > 25:
             return False
         else:
             return True
-    def send_bill(self):
-        pass
     # only reps
     def break_exe_tie(self, exe_options):
         diff = 101
