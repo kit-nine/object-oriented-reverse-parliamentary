@@ -3,15 +3,14 @@ from types import NoneType
 
 # ADDITIONAL NOTES
 # → - two executives
-#   - a set amount of laws per generation - manual input or a set amount can be built in
+#   - a set amount of laws per year - manual input or a set amount can be built in
 # → - go through entire legislative process rather than just simple voting
 # → - full political compass; left-right and libertarian-authoritarian (array)
 # → - get rid of global variables
 # → - object-oriented legislature
-# → - the parents will survive 1 generation.
+# → - the parents will survive 1 year.
 #   - media influence can skew the voting by a certain amount - manual input
 # → - law creation is skewed toward the position of the legislative, not just random from their side
-#   - VP instead of a randint for the tiebreaker
 # → - reproduction is yearly, for simplicity of elections
 
 # variables
@@ -20,12 +19,14 @@ year = 0
 day = 1
 new_voters = []
 old_voters = []
+results = []
 # CONSTANTS
 VOTERS_PER_STATE = 200 # Default: 200
 STATES = {0:"AK",1:"AL",2:"AR",3:"AZ",4:"CA",5:"CO",6:"CT",7:"DE",8:"FL",9:"GA",10:"HI",11:"IA",12:"ID",13:"IL",14:"IN",15:"KS",16:"KY",17:"LA",18:"MA",19:"MD",20:"ME",21:"MI",22:"MN",23:"MO",24:"MS",25:"MT",26:"NC",27:"ND",28:"NE",29:"NH",30:"NJ",31:"NM",32:"NV",33:"NY",34:"OH",35:"OK",36:"OR",37:"PA",38:"RI",39:"SC",40:"SD",41:"TN",42:"TX",43:"UT",44:"VA",45:"VT",46:"WA",47:"WI",48:"WV",49:"WY"}
 REPS_PER_STATE = {"AK":1,"AL":7,"AR":4,"AZ":9,"CA":53,"CO":7,"CT":5,"DE":1,"FL":27,"GA":14,"HI":2,"IA":4,"ID":2,"IL":18,"IN":9,"KS":4,"KY":6,"LA":6,"MA":9,"MD":8,"ME":2,"MI":14,"MN":8,"MO":8,"MS":4,"MT":1,"NC":13,"ND":1,"NE":3,"NH":2,"NJ":12,"NM":3,"NV":4,"NY":27,"OH":16,"OK":5,"OR":5,"PA":18,"RI":2,"SC":7,"SD":1,"TN":9,"TX":36,"UT":4,"VA":11,"VT":1,"WA":10,"WI":8,"WV":3,"WY":1}
 FULL_COMPASS_TO_CORNER = {1:1,2:1,6:1,7:1,3:2,4:2,8:2,9:2,5:3,26:3,10:3,31:3,27:4,28:4,32:4,33:4,29:5,30:5,34:5,35:5,11:6,12:6,16:6,17:6,13:7,14:7,18:7,19:7,15:8,36:8,20:8,41:8,37:9,38:9,42:9,43:9,39:10,40:10,44:10,45:10,21:11,22:11,51:11,52:11,23:12,24:12,53:12,54:12,25:13,46:13,55:13,76:13,47:14,48:14,77:14,78:14,49:15,50:15,79:15,80:15,56:16,57:16,61:16,62:16,58:17,59:17,63:17,64:17,60:18,81:18,65:18,86:18,82:19,83:19,87:19,88:19,84:20,85:20,89:20,90:20,66:21,67:21,71:21,72:21,68:22,69:22,73:22,74:22,70:23,91:23,75:23,96:23,92:24,93:24,97:24,98:24,94:25,95:25,99:25,100:25}
-RUNTIME = 10
+RUNTIME = 100
+PERCENTAGES = {1:90, 2:80, 3:70, 4:60, 5:50, 6:40, 7:30, 8:20, 9:10}
 # Classes
 # Voter class
 class Voter: # The voter class will have methods of voting for the position for the legislature, voting for the executive, and reproduction 
@@ -104,19 +105,22 @@ class Legislator: # The legislator class will have methods of breaking a tie in 
 #Bill class
 class Bill: # The Bill class will have certain properties, but no methods.
     def __init__(self, pos, chamber, number):
+        global PERCENTAGES
         self.created_by = chamber
         if self.created_by == "house": self.designation = ("H." + str(number))
         if self.created_by == "senate": self.designation = ("S." + str(number))
         self.pos = pos
         self.alive = True
         self.passed = False
-        self.distance = 0
+        self.distance, PERCENTAGES = self.determine_distance()
         self.constitutionality = None
         if self.pos < 26: self.corner = "AL"
         if self.pos > 25 and self.pos < 51: self.corner = "AR"
         if self.pos > 50 and self.pos < 76: self.corner = "LL"
         if self.pos > 75: self.corner = "LR"
     def determine_distance(self):
+        global PERCENTAGES
+        distance = None
         d1 = (25,46,76,55)
         d2 = (24,20,41,47,77,81,60,54)
         d3 = (23,19,15,36,42,48,78,82,86,65,59,53)
@@ -127,17 +131,17 @@ class Bill: # The Bill class will have certain properties, but no methods.
         d8 = (6,2,29,35,95,99,72,66)
         d9 = (1,30,100,71)
         dlist = [d1,d2,d3,d4,d5,d6,d7,d8,d9]
-        percentages = {1:90, 2:80, 3:70, 4:60, 5:50, 6:40, 7:30, 8:20, 9:10}
-        for a in dlist:
-            templist = []
-            for b in a:
-                if self.pos == b:
-                    templist.append(True)
-                else:
-                    templist.append(False)
-            if any(templist) == True:
-                self.distance = dlist.index(a) + 1
-        return percentages
+        while distance == None:
+            for a in dlist:
+                templist = []
+                for b in a:
+                    if self.pos == b:
+                        templist.append(True)
+                    else:
+                        templist.append(False)
+                if any(templist):
+                    distance = dlist.index(a) + 1
+        return distance, PERCENTAGES
 # Executive class
 class Executive: # The executive class will have methods of signing bills into law, vetoing and sending the bill back to congress, and pocket vetoing.
     def __init__(self, pos):
@@ -425,7 +429,9 @@ def executive_lawmaking(executive, bill):
         executive.veto(bill)
     else:
         executive.sign_bill(bill)
-    return bill
+    if bill.alive == False: vetoed = True
+    else: vetoed = False
+    return bill, vetoed
     
 def congress_override(bill, congress_members):
     congress_pos = 0
@@ -441,15 +447,16 @@ def congress_override(bill, congress_members):
                 bill.alive = True
     return bill
 
-def judicial_review(bill, justices, percentages):
+def judicial_review(bill, justices):
+    global PERCENTAGES
     votes = []
     for i in justices:
         if bill.corner == i.corner:
-            if random.randint(1,100) < percentages.get(bill.distance) + i.bias:
+            if random.randint(1,100) < PERCENTAGES.get(bill.distance) + i.bias:
                 i.vote = True
             else: i.vote = False
         if bill.corner == i.opp_corner:
-            if random.randint(1,100) < percentages.get(bill.distance) - i.bias:
+            if random.randint(1,100) < PERCENTAGES.get(bill.distance) - i.bias:
                 i.vote = True
             else: i.vote = False
         votes.append(i.vote)
@@ -463,21 +470,15 @@ generate_gen1_voters(voters)
 if year % 2 == 0:
     h_o_r_positions, h_o_r_members = h_o_r_voting(voters)
     h_o_r_pos, h_o_r_corner = avg_pos(h_o_r_positions)
-    h_o_r_status = "H.O.R. Average Position:" + str(h_o_r_pos) + "\nH.O.R. Corner:" + str(h_o_r_corner)
-    print(h_o_r_status)
 if year % 6 == 0:
     senate_positions, senate_members = senate_voting(voters)
     senate_pos, senate_corner = avg_pos(senate_positions)
-    senate_status = "Senate Average Position:" + str(senate_pos) + "\nSenate Corner:" + str(senate_corner)
-    print(senate_status)
 if year % 4 == 0:
     contra_domus, c_d_pos = c_d_voting(voters, h_o_r_members, h_o_r_pos, h_o_r_corner)
     contrum_senatum, c_s_pos = c_s_voting(voters, senate_members, senate_pos, senate_corner)
     c_d_jchoice(contra_domus)
     c_s_jchoice(contrum_senatum)
     combined_jchoice(contra_domus, contrum_senatum)
-    executive_status = "C.D. Position:" + str(c_d_pos) + "\nC.S. Position:" + str(c_s_pos)
-    print(executive_status)
 for i in h_o_r_members:
     congress_members.append(i)
 for i in senate_members:
@@ -487,22 +488,26 @@ judicial_bias = 0
 for i in justices:
     justice_bias.append(i.bias)
     judicial_bias += i.bias
-judicial_status = "Judicial Biases, Separate:", justice_bias, "\nOverall Judicial Bias:", judicial_bias / 9
-print(judicial_status)
 
 while year <= RUNTIME:
-    bill = congress_lawmaking(congress_members, h_o_r_members, senate_members)
-    if bill.alive == True: bill = executive_lawmaking(contra_domus, bill)
-    if bill.alive == False: bill = congress_override(bill, congress_members)
-    percentages = bill.determine_distance()
-    if bill.alive == True: bill = judicial_review(bill, justices, percentages)
-    day += 1
-    daily_status = "Bill Position:" + str(bill.pos) + "   Day:" + str(day)
-    if bill.alive == True and bill.constitutionality == True: daily_status += "----- This bill became a law."
-    elif bill.alive == False: daily_status += "----- This bill was killed before its constitutionality was determined."
-    elif bill.constitutionality == False: daily_status += "----- This bill was unconstitutional."
-    print(daily_status)
-    if day == 365:
-        day = 1
-        year += 1
-        print("Year", year)
+    while day <= 365:
+        for i in range(0, 44):
+            bill = congress_lawmaking(congress_members, h_o_r_members, senate_members)
+            if bill.alive == True: bill, vetoed = executive_lawmaking(contra_domus, bill)
+            else: vetoed = False
+            if bill.alive == False and vetoed == True: bill = congress_override(bill, congress_members)
+            if bill.alive == True: bill = judicial_review(bill, justices)
+            if bill.alive == True and bill.constitutionality == True:
+                results.append(0)
+            elif bill.alive == False or bill.constitutionality == None:
+                results.append(1)
+            elif bill.constitutionality == False:
+                results.append(2)
+        day += 1
+    day = 1
+    year += 1
+    print("Year", year)
+
+print("Bills passed this run:", results.count(0))
+print("Bills that died before constitutionality check:", results.count(1))
+print("Bills that were found unconstitutional:", results.count(2))
