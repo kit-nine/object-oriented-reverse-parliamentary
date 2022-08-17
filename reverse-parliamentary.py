@@ -24,9 +24,10 @@ VOTERS_PER_STATE = 200 # Default: 200
 STATES = {0:"AK",1:"AL",2:"AR",3:"AZ",4:"CA",5:"CO",6:"CT",7:"DE",8:"FL",9:"GA",10:"HI",11:"IA",12:"ID",13:"IL",14:"IN",15:"KS",16:"KY",17:"LA",18:"MA",19:"MD",20:"ME",21:"MI",22:"MN",23:"MO",24:"MS",25:"MT",26:"NC",27:"ND",28:"NE",29:"NH",30:"NJ",31:"NM",32:"NV",33:"NY",34:"OH",35:"OK",36:"OR",37:"PA",38:"RI",39:"SC",40:"SD",41:"TN",42:"TX",43:"UT",44:"VA",45:"VT",46:"WA",47:"WI",48:"WV",49:"WY"}
 REPS_PER_STATE = {"AK":1,"AL":7,"AR":4,"AZ":9,"CA":53,"CO":7,"CT":5,"DE":1,"FL":27,"GA":14,"HI":2,"IA":4,"ID":2,"IL":18,"IN":9,"KS":4,"KY":6,"LA":6,"MA":9,"MD":8,"ME":2,"MI":14,"MN":8,"MO":8,"MS":4,"MT":1,"NC":13,"ND":1,"NE":3,"NH":2,"NJ":12,"NM":3,"NV":4,"NY":27,"OH":16,"OK":5,"OR":5,"PA":18,"RI":2,"SC":7,"SD":1,"TN":9,"TX":36,"UT":4,"VA":11,"VT":1,"WA":10,"WI":8,"WV":3,"WY":1}
 FULL_COMPASS_TO_CORNER = {1:1,2:1,6:1,7:1,3:2,4:2,8:2,9:2,5:3,26:3,10:3,31:3,27:4,28:4,32:4,33:4,29:5,30:5,34:5,35:5,11:6,12:6,16:6,17:6,13:7,14:7,18:7,19:7,15:8,36:8,20:8,41:8,37:9,38:9,42:9,43:9,39:10,40:10,44:10,45:10,21:11,22:11,51:11,52:11,23:12,24:12,53:12,54:12,25:13,46:13,55:13,76:13,47:14,48:14,77:14,78:14,49:15,50:15,79:15,80:15,56:16,57:16,61:16,62:16,58:17,59:17,63:17,64:17,60:18,81:18,65:18,86:18,82:19,83:19,87:19,88:19,84:20,85:20,89:20,90:20,66:21,67:21,71:21,72:21,68:22,69:22,73:22,74:22,70:23,91:23,75:23,96:23,92:24,93:24,97:24,98:24,94:25,95:25,99:25,100:25}
-RUNTIME = 10
+RUNTIME = 0
 PERCENTAGES = {1:90, 2:80, 3:70, 4:60, 5:50, 6:40, 7:30, 8:20, 9:10}
 MAX_ABS_DIFF = 24
+INFL = 0
 # Classes
 # Voter class
 class Voter: # The voter class will have methods of voting for the position for the legislature, voting for the executive, and reproduction 
@@ -39,7 +40,7 @@ class Voter: # The voter class will have methods of voting for the position for 
         self.will_follow_parent = will_follow_parent    # whether or not this voter will follow their parent                       - bool
     def leg_voting(self): # Each voter will place their vote, an integer 1-100, representing a coordinate on the political compass, for 2 senators and for the number of representatives their state is allotted. Voting procedure depends on the generation. Happens every 2 years.
         if self.parent == True: self.leg_vote = parent_vote_math(self.parent_vote, self.will_follow_parent, self.parent_corner)
-        else: self.leg_vote = random.randint(1,100)
+        else: self.leg_vote = skew(INFL, 1, 100)
     def exe_voting(self, leg_corner, leg_pos): # Each voter will place their vote, an integer either 1-25, 26-50, 51-75, or 76-100, (these corners are named AL, AR, LL, and LR, respectively) representing a coordinate on the political compass. Which corner they choose from for each executive depends on the average position of the legislators in each chamber of congress.
         if self.parent == True:
             self.exe_vote = exe_parent_vote_math(leg_pos, self, leg_corner)
@@ -48,13 +49,13 @@ class Voter: # The voter class will have methods of voting for the position for 
             if leg_corner == "AR": add = 50
             if leg_corner == "LL": add = 25
             if leg_corner == "LR": add = 0
-            self.exe_vote = FULL_COMPASS_TO_CORNER.get(random.randint(1,100)) + add
+            self.exe_vote = FULL_COMPASS_TO_CORNER.get(skew(INFL, 1, 100)) + add
     def reproduce(self): # Each voter will reproduce by creating a new voter and deciding whether the voter will vote the same or the opposite as this voter. In this simulation, each person has one child and has full authority on the way that they treat this child. Any outside environmental factors that may affect the child's voting decisions are ignored for variable control.
         if self.leg_vote <= 25: corner = "AL"
         if self.leg_vote > 25 and self.leg_vote <= 50: corner = "AR"
         if self.leg_vote > 50 and self.leg_vote <= 75: corner = "LL"
         if self.leg_vote > 75 and self.leg_vote <= 100: corner = "LR"
-        if random.randint(0,1) == 0: will_follow_parent = True
+        if skew(INFL,0,1) == 0: will_follow_parent = True
         else: will_follow_parent = False
         child = Voter(True, self.leg_vote, corner, will_follow_parent)
         return child
@@ -66,11 +67,11 @@ class Legislator: # The legislator class will have methods of breaking a tie in 
         self.exe_tiebreaker_vote = 0
         self.chamber = chamber
     def introduce_bill(self, last_number):
-        chance = random.randint(1,100)
+        chance = skew(INFL,1,100)
         if chance < 93:
             bill_pos = self.pos
         else:
-            bill_pos = random.randint(1,100)
+            bill_pos = skew(INFL,1,100)
         if self.chamber == "house":
             H = Bill(bill_pos ,self.chamber, last_number + 1)
             return H
@@ -78,7 +79,7 @@ class Legislator: # The legislator class will have methods of breaking a tie in 
             S = Bill(bill_pos ,self.chamber, last_number + 1)
             return S
     def committee_vote(self, bill):
-        if random.randint(1,100) <= 93 and abs(bill.pos - self.pos) < MAX_ABS_DIFF: committee_vote = 1
+        if skew(INFL,1,100) <= 93 and abs(bill.pos - self.pos) < MAX_ABS_DIFF: committee_vote = 1
         else: committee_vote = 0
         return committee_vote
     def vote_on_final_bill(self, bill):
@@ -182,6 +183,19 @@ class Justice: # The Justice class will have methods of declaring laws constitut
         bill.alive = False
 
 # functions
+# skew function for media influence
+def skew(influence, range1, range2):            # influence should be a float between -1 and 1, including 0; type should be a string, either "bool" or "int", range1 and range2 should form the range that should be randomly picked from
+    skew_int = random.randint(range1, range2)   # gets a random number in the range
+    if influence > 0 and skew_int != range2:    # if the influence leans right
+        skew_int += influence * (range2 - 1)    # multiply the influence times one less than the end of the range
+    elif influence < 0 and skew_int != range1:  # otherwise, if the influence leans left
+        skew_int += influence * (range1 + 1)    # multiply the influence times one more than the start of the range
+    if skew_int < range1:                       # if this number is less than the smallest number in the range
+        skew_int = range1                       # it becomes the smallest number in the range
+    elif skew_int > range2:                     # otherwise, if this number is more than the largest number in the range
+        skew_int = range2                       # it becomes the largest number in the range
+    skew_int = int(skew_int)                    # rounds the float down
+    return skew_int
 # used by Voter class only
 def parent_vote_math(parent_vote, will_follow_parent, parent_corner):
     operation_options = ["ADD", "SUBTRACT"]
@@ -201,9 +215,9 @@ def parent_vote_math(parent_vote, will_follow_parent, parent_corner):
     return vote_from_parent_vote(parent_vote, min, max, add_or_subtract)
 def vote_from_parent_vote(parent_vote, min, max, add_or_subtract):
     if add_or_subtract == "ADD":
-        vote = parent_vote + (random.randint(1,abs(max - parent_vote) + 1) - 1)
+        vote = parent_vote + (skew(INFL,1,abs(max - parent_vote) + 1) - 1)
     if add_or_subtract == "SUBTRACT":
-        vote = parent_vote - (random.randint(1,abs(min - parent_vote) + 1) - 1)
+        vote = parent_vote - (skew(INFL,1,abs(min - parent_vote) + 1) - 1)
     return vote
 # take the voter's parent's vote and turn that into a guideline by turning the 1-100 compass into one of its corners
 def exe_parent_vote_math(voter, leg_corner):
@@ -330,7 +344,7 @@ justices = []
 def c_d_jchoice(executive):
     global justices
     for i in range(4):
-        bias = random.randint(1,5)
+        bias = skew(INFL,1,5)
         if executive.corner == "AL": jpos = 25 - bias
         if executive.corner == "AR": jpos = 46 - bias
         if executive.corner == "LL": jpos = 55 + bias
@@ -341,7 +355,7 @@ def c_d_jchoice(executive):
 def c_s_jchoice(executive):
     global justices
     for i in range(4):
-        bias = random.randint(1,5)
+        bias = skew(INFL,1,5)
         if executive.corner == "AL": jpos = 25 - bias
         if executive.corner == "AR": jpos = 46 - bias
         if executive.corner == "LL": jpos = 55 + bias
@@ -351,13 +365,13 @@ def c_s_jchoice(executive):
 # the CS and CD have to agree on the position of the final justice
 def combined_jchoice(CD, CS):
     global justices
-    bias = random.randint(1,5)
+    bias = skew(INFL,1,5)
     if CD.corner == "AL": jpos = 25 - bias
     if CD.corner == "AR": jpos = 46 - bias
     if CD.corner == "LL": jpos = 55 + bias
     if CD.corner == "LR": jpos = 76 + bias
     CDjustice = Justice(jpos, bias)
-    bias = random.randint(1,5)
+    bias = skew(INFL,1,5)
     if CS.corner == "AL": jpos = 25 - bias
     if CS.corner == "AR": jpos = 46 - bias
     if CS.corner == "LL": jpos = 55 + bias
@@ -376,9 +390,9 @@ def congress_lawmaking(congress_members, h_o_r_members, senate_members):
     sum_vote = 0
     house_bill_pos = 0
     senate_bill_pos = 0
-    bill = congress_members[random.randint(1,len(congress_members)-1)].introduce_bill(last_number)
+    bill = congress_members[skew(INFL,1,len(congress_members)-1)].introduce_bill(last_number)
     original_bill_pos =  bill.pos
-    committee_center = random.randint(2,len(congress_members)-3)
+    committee_center = skew(INFL,2,len(congress_members)-3)
     for i in range(-2,3):
         committee_votes.append(congress_members[committee_center + i].committee_vote(bill))
     for i in committee_votes:
@@ -386,7 +400,7 @@ def congress_lawmaking(congress_members, h_o_r_members, senate_members):
     if sum_vote / 5 < 0.5:
         bill.alive = False
     if bill.alive == True:
-        if random.randint(0,6) < 4:
+        if skew(INFL,0,6) < 4:
             for i in h_o_r_members:
                 i.debate(bill)
             supermajority = False
@@ -401,7 +415,7 @@ def congress_lawmaking(congress_members, h_o_r_members, senate_members):
         if bill.alive == True:
             house_bill_pos = bill.pos
             bill.pos = original_bill_pos
-        if random.randint(0,6) < 4:
+        if skew(INFL,0,6) < 4:
             for i in senate_members:
                 i.debate(bill)
             supermajority = False
@@ -445,7 +459,7 @@ def congress_override(bill, congress_members):
         congress_pos += i.pos
     congress_pos /= len(congress_members)
     if abs(bill.pos - congress_pos) < MAX_ABS_DIFF:
-        if random.randint(1,1000) > 994:
+        if skew(INFL,1,1000) > 994:
             for i in congress_members:
                 override_votes.append(i.override(bill))
             if int(override_votes.count(True) / len(override_votes) * 10) >= 6:
@@ -457,11 +471,11 @@ def judicial_review(bill, justices):
     votes = []
     for i in justices:
         if bill.corner == i.corner:
-            if random.randint(1,100) < PERCENTAGES.get(bill.distance) + i.bias:
+            if skew(INFL,1,100) < PERCENTAGES.get(bill.distance) + i.bias:
                 i.vote = True
             else: i.vote = False
         if bill.corner == i.opp_corner:
-            if random.randint(1,100) < PERCENTAGES.get(bill.distance) - i.bias:
+            if skew(INFL,1,100) < PERCENTAGES.get(bill.distance) - i.bias:
                 i.vote = True
             else: i.vote = False
         votes.append(i.vote)
