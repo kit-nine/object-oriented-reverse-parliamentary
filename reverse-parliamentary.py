@@ -23,15 +23,30 @@ day = 1
 new_voters = []
 old_voters = []
 results = []
+bill_avg_pos = []
+grid = []
+positions = []
+for a in range(10):
+    temp = []
+    for b in range(-5,6):
+        temp.append(b)
+    grid.append(temp)
+for a in range(0, len(grid)):
+    for b in range(len(grid)):
+        positions.append((a-5, grid[a + 1][b + 1]))
+for i in positions: print(i, end=", ")
+
+
 # CONSTANTS
 VOTERS_PER_STATE = 200 # Default: 200
 STATES = {0:"AK",1:"AL",2:"AR",3:"AZ",4:"CA",5:"CO",6:"CT",7:"DE",8:"FL",9:"GA",10:"HI",11:"IA",12:"ID",13:"IL",14:"IN",15:"KS",16:"KY",17:"LA",18:"MA",19:"MD",20:"ME",21:"MI",22:"MN",23:"MO",24:"MS",25:"MT",26:"NC",27:"ND",28:"NE",29:"NH",30:"NJ",31:"NM",32:"NV",33:"NY",34:"OH",35:"OK",36:"OR",37:"PA",38:"RI",39:"SC",40:"SD",41:"TN",42:"TX",43:"UT",44:"VA",45:"VT",46:"WA",47:"WI",48:"WV",49:"WY"}
 REPS_PER_STATE = {"AK":1,"AL":7,"AR":4,"AZ":9,"CA":53,"CO":7,"CT":5,"DE":1,"FL":27,"GA":14,"HI":2,"IA":4,"ID":2,"IL":18,"IN":9,"KS":4,"KY":6,"LA":6,"MA":9,"MD":8,"ME":2,"MI":14,"MN":8,"MO":8,"MS":4,"MT":1,"NC":13,"ND":1,"NE":3,"NH":2,"NJ":12,"NM":3,"NV":4,"NY":27,"OH":16,"OK":5,"OR":5,"PA":18,"RI":2,"SC":7,"SD":1,"TN":9,"TX":36,"UT":4,"VA":11,"VT":1,"WA":10,"WI":8,"WV":3,"WY":1}
 FULL_COMPASS_TO_CORNER = {1:1,2:1,6:1,7:1,3:2,4:2,8:2,9:2,5:3,26:3,10:3,31:3,27:4,28:4,32:4,33:4,29:5,30:5,34:5,35:5,11:6,12:6,16:6,17:6,13:7,14:7,18:7,19:7,15:8,36:8,20:8,41:8,37:9,38:9,42:9,43:9,39:10,40:10,44:10,45:10,21:11,22:11,51:11,52:11,23:12,24:12,53:12,54:12,25:13,46:13,55:13,76:13,47:14,48:14,77:14,78:14,49:15,50:15,79:15,80:15,56:16,57:16,61:16,62:16,58:17,59:17,63:17,64:17,60:18,81:18,65:18,86:18,82:19,83:19,87:19,88:19,84:20,85:20,89:20,90:20,66:21,67:21,71:21,72:21,68:22,69:22,73:22,74:22,70:23,91:23,75:23,96:23,92:24,93:24,97:24,98:24,94:25,95:25,99:25,100:25}
-RUNTIME = 1000
+RUNTIME = 10
 PERCENTAGES = {1:90, 2:80, 3:70, 4:60, 5:50, 6:40, 7:30, 8:20, 9:10}
 MAX_ABS_DIFF = 24 # Default:  24 (Causes ~1% pass rate)
 INFL = 0
+
 # Classes
 # Voter class
 class Voter: # The voter class will have methods of voting for the position for the legislature, voting for the executive, and reproduction 
@@ -71,8 +86,8 @@ class Legislator: # The legislator class will have methods of breaking a tie in 
         self.exe_tiebreaker_vote = 0
         self.chamber = chamber
     def introduce_bill(self, last_number):
-        chance = skew(INFL,1,100)
-        if chance < 93:
+        chance = random.randint(1,100)
+        if chance < 95:
             bill_pos = self.pos
         else:
             bill_pos = skew(INFL,1,100)
@@ -83,7 +98,7 @@ class Legislator: # The legislator class will have methods of breaking a tie in 
             S = Bill(bill_pos ,self.chamber, last_number + 1)
             return S
     def committee_vote(self, bill):
-        if skew(INFL,1,100) <= 93 and abs(bill.pos - self.pos) < MAX_ABS_DIFF: committee_vote = 1
+        if random.randint(1,100) <= 95 and abs(bill.pos - self.pos) < MAX_ABS_DIFF: committee_vote = 1
         else: committee_vote = 0
         return committee_vote
     def vote_on_final_bill(self, bill):
@@ -404,7 +419,7 @@ def congress_lawmaking(congress_members, h_o_r_members, senate_members):
     if sum_vote / 5 < 0.5:
         bill.alive = False
     if bill.alive == True:
-        if skew(INFL,0,6) < 4:
+        if random.randint(1,100) <= 36:
             for i in h_o_r_members:
                 i.debate(bill)
             supermajority = False
@@ -419,7 +434,7 @@ def congress_lawmaking(congress_members, h_o_r_members, senate_members):
         if bill.alive == True:
             house_bill_pos = bill.pos
             bill.pos = original_bill_pos
-        if skew(INFL,0,6) < 4:
+        if random.randint(1,100) <= 36:
             for i in senate_members:
                 i.debate(bill)
             supermajority = False
@@ -529,15 +544,19 @@ while year <= RUNTIME:
             else:
                 results.append("Failed")
         day += 1
-        if day % 5 == 0: print("▒", end="")
+#        if day % 5 == 0: print("▒", end="")
     day = 1
     year += 1
-    print("│")
-    print("└", "─" * 73, "┘", sep="")
-    print("\nYear", year)
-    print("\n" * 6)
+#    print("│")
+#    print("└", "─" * 73, "┘", sep="")
+#    print("\nYear", year)
+#    print("\n" * 6)
 
-print("Passed:", results.count("Passed"))
-print("Failed:", results.count("Failed"))
-print("Total:", len(results))
-print("Percentage Passed: ", str((results.count("Passed")/len(results))*100)[0:4], "%", sep="")
+#print("Passed:", results.count("Passed"))
+#print("Failed:", results.count("Failed"))
+#print("Total:", len(results))
+#print("Percentage Passed: ", str((results.count("Passed")/len(results))*100)[0:4], "%", sep="")
+#print("House Avg Pos:", h_o_r_pos)
+#print("Senate Avg Pos:", senate_pos)
+#print("Contra Domus Pos:", c_d_pos)
+#print("Contrum Senatum Pos:", c_s_pos)
