@@ -31,11 +31,10 @@ for a in range(10):
     for b in range(-5,6):
         temp.append(b)
     grid.append(temp)
-for a in range(0, len(grid)):
+for a in range(len(grid)):
     for b in range(len(grid)):
-        positions.append((a-5, grid[a + 1][b + 1]))
+        positions.append((a-5, grid[a][b]))
 for i in positions: print(i, end=", ")
-
 
 # CONSTANTS
 VOTERS_PER_STATE = 200 # Default: 200
