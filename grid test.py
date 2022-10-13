@@ -13,23 +13,22 @@
 
 # (y, x) column priority index
 
-max_cols = 10
-max_rows = 10
 grid = []
 temp = []
-count = 0
 
-for cols in range(max_cols):
-    for rows in range(max_rows):
-        temp.append(count)
-        count += 1
+for cols in range(-5,6):
+    for rows in range(-5,6):
+        temp.append((cols, rows))
     grid.append(temp)
     temp = []
+for cols in grid:
+    for a in cols:
+        if a[1] < 0:
+            cols.remove(a)
+            cols.append(a)
+        if a[0] < 0:
+            grid.remove(cols)
+            grid.append(cols)
 
-for i in grid:
-  print(i)
-
-grid[0][3]
-
-# need to switch to (x, y) to fit the grid (-+ = AL, ++ = AR, -- = LL, +- = LR)
-# it also needs to go from -5 to 5 and instead of adding 1 each time it needs to be like in the grid
+for col in grid:
+    print(col)
