@@ -1,4 +1,4 @@
-# → - I think to rework the compass and to add the graphical representation, I need to restart in a new file. This is that.
+# → - I think to rework the compass and to add the graphical representation, I need to restart in a new file. This is that reworking.
 
 #   - two executives
 #   - a set amount of laws per year - manual input or a set amount can be built in
