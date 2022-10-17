@@ -11,24 +11,18 @@
 # (-5, -4)(-4, -4)(-3, -4)(-2, -4)(-1, -4)(0, -4) (1, -4) (2, -4) (3, -4) (4, -4) (5, -4)
 # (-5, -5)(-4, -5)(-3, -5)(-2, -5)(-1, -5)(0, -5) (1, -5) (2, -5) (3, -5) (4, -5) (5, -5)
 
-# (y, x) column priority index
-
 grid = []
 temp = []
+X = -4
+Y = -3
+output_coords = None
 
-for cols in range(-5,6):
-    for rows in range(-5,6):
-        temp.append((cols, rows))
+for cols in range(11):
+    for rows in range(11):
+        temp.append((rows - 5, cols + (10 - 5 - (2 * cols))))
     grid.append(temp)
     temp = []
-for cols in grid:
-    for a in cols:
-        if a[1] < 0:
-            cols.remove(a)
-            cols.append(a)
-        if a[0] < 0:
-            grid.remove(cols)
-            grid.append(cols)
 
-for col in grid:
-    print(col)
+output_coords = grid[(6 - Y) - 1][(6 + X) - 1]
+
+print(output_coords)

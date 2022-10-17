@@ -23,3 +23,8 @@ Upcoming Grid (really annoying to code [and write, this took forever :/], but ma
 (-5, -3)(-4, -3)(-3, -3)(-2, -3)(-1, -3)(0, -3) (1, -3) (2, -3) (3, -3) (4, -3) (5, -3)
 (-5, -4)(-4, -4)(-3, -4)(-2, -4)(-1, -4)(0, -4) (1, -4) (2, -4) (3, -4) (4, -4) (5, -4)
 (-5, -5)(-4, -5)(-3, -5)(-2, -5)(-1, -5)(0, -5) (1, -5) (2, -5) (3, -5) (4, -5) (5, -5)
+
+grid corners to integers (for easier calculations shut up)
+AL │ AR    1 │ 2
+───┼─── → ───┼───
+LL │ LR    3 │ 4 
