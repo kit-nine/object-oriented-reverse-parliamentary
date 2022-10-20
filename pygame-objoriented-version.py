@@ -1,4 +1,4 @@
-# → - I think to rework the compass and to add the graphical representation, I need to restart in a new file. This is that reworking.
+# → - to rework the compass and to add the graphical representation, i need to restart in a new file. this is that reworking.
 
 #   - two executives
 #   - a set amount of laws per year - manual input or a set amount can be built in
@@ -21,7 +21,7 @@ from pygame.locals import *
 pygame.init()
 #variables
 fps_clock = pygame.time.Clock()
-WINDOW = pygame.display.set_mode((1920,1070))
+WINDOW = pygame.display.set_mode((1900,1050))
 YEARS = 10
 grid = []
 temp = []
@@ -38,7 +38,7 @@ r_votes = []
 cd_votes = []
 senators = []
 reps = []
-font = pygame.font.Font('specialelite', 12)
+font = pygame.font.Font(r"C:\Users\5926000727\AppData\Local\Microsoft\Windows\Fonts\SpecialElite-Regular.ttf", 70)
 # output_coords = None
 # put the object-oriented reverse parliamentary system code here
 # congress
@@ -98,8 +98,12 @@ for i in range(50):
         voter = Voter(i, grid[(6 - skew(-5, 5)) - 1][(6 + skew(-5, 5)) - 1])
 # the display, using pygame
 while True:
+    WINDOW.fill((0,0,0))
     for year in range(YEARS):
-        pygame.font.Font.render(year, True, (255,255,255), background=None)
+        msg_surface = font.render(str(year), True, (255,255,255))
+        msg_rect = msg_surface.get_rect()
+        msg_rect.topleft = (100,100)
+        WINDOW.blit(msg_surface, msg_rect)
     # every year
         # lawmaking
             # house voting
@@ -138,7 +142,7 @@ while True:
                     representative = Representative(avgvote)
                     reps.append(representative)
                     r_votes.clear()
-
+    pygame.draw.rect(WINDOW, (0,0,0), (msg_rect))
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
