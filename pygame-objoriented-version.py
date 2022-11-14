@@ -22,7 +22,7 @@ pygame.init()
 #variables
 fps_clock = pygame.time.Clock()
 WINDOW = pygame.display.set_mode((1900,1050))
-YEARS = 10
+YEARS = 1000
 grid = []
 temp = []
 X = -4
@@ -39,6 +39,7 @@ cd_votes = []
 senators = []
 reps = []
 font = pygame.font.Font(r"C:\Users\5926000727\AppData\Local\Microsoft\Windows\Fonts\SpecialElite-Regular.ttf", 70)
+loop = True
 # output_coords = None
 # put the object-oriented reverse parliamentary system code here
 # congress
@@ -97,13 +98,15 @@ for i in range(50):
     for i_1 in range(VOTERS_PER_STATE):
         voter = Voter(i, grid[(6 - skew(-5, 5)) - 1][(6 + skew(-5, 5)) - 1])
 # the display, using pygame
-while True:
+while loop == True:
     WINDOW.fill((0,0,0))
     for year in range(YEARS):
         msg_surface = font.render(str(year), True, (255,255,255))
         msg_rect = msg_surface.get_rect()
         msg_rect.topleft = (100,100)
+#        pygame.draw.rect(WINDOW, (0,0,0), (msg_rect))
         WINDOW.blit(msg_surface, msg_rect)
+        print(year)
     # every year
         # lawmaking
             # house voting
@@ -142,7 +145,8 @@ while True:
                     representative = Representative(avgvote)
                     reps.append(representative)
                     r_votes.clear()
-    pygame.draw.rect(WINDOW, (0,0,0), (msg_rect))
+        if year == YEARS - 1:
+            loop = False
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
