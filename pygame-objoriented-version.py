@@ -8,10 +8,10 @@
 #   - object-oriented legislature
 #   - the parents will survive 1 year
 #   - media influence can skew the voting by a certain amount - manual input
-#   - law creation is skewed toward the position of the legislative, not just random from their side
+#   - law creation is skewed toward the position of the legislative, not just random from their corner
 #   - reproduction is yearly, for simplicity of elections
 #   - cool & easy to use graphics that show all the possible information you can take from the simulation
-#   - passed laws' average position
+#   - passed laws' average positions
 #   - make some voters not vote
 #   - electoral system
 
@@ -21,7 +21,7 @@ from pygame.locals import *
 pygame.init()
 #variables
 fps_clock = pygame.time.Clock()
-WINDOW = pygame.display.set_mode((1900,1050))
+WINDOW = pygame.display.set_mode((500,500))
 YEARS = 1000
 grid = []
 temp = []
@@ -38,8 +38,9 @@ r_votes = []
 cd_votes = []
 senators = []
 reps = []
-font = pygame.font.Font(r"C:\Users\5926000727\AppData\Local\Microsoft\Windows\Fonts\SpecialElite-Regular.ttf", 70)
+font = pygame.font.Font(None, 70)
 loop = True
+year = 0
 # output_coords = None
 # put the object-oriented reverse parliamentary system code here
 # congress
@@ -88,8 +89,7 @@ def skew(min, max): # both min and max are inclusive
     return int(output)
 # create the compass
 for cols in range(11):
-    for rows in range(11):
-        temp.append((rows - 5, cols + (10 - 5 - (2 * cols))))
+    for rows in range(11): temp.append((rows - 5, cols + (10 - 5 - (2 * cols))))
     grid.append(temp)
     temp = []
 # output_coords = grid[(6 - Y) - 1][(6 + X) - 1]
@@ -98,59 +98,55 @@ for i in range(50):
     for i_1 in range(VOTERS_PER_STATE):
         voter = Voter(i, grid[(6 - skew(-5, 5)) - 1][(6 + skew(-5, 5)) - 1])
 # the display, using pygame
+WINDOW.fill((0,0,0))
 while loop == True:
-    WINDOW.fill((0,0,0))
-    for year in range(YEARS):
-        msg_surface = font.render(str(year), True, (255,255,255))
-        msg_rect = msg_surface.get_rect()
-        msg_rect.topleft = (100,100)
-#        pygame.draw.rect(WINDOW, (0,0,0), (msg_rect))
-        WINDOW.blit(msg_surface, msg_rect)
-        print(year)
-    # every year
-        # lawmaking
-            # house voting
-            # senate voting
-            # conciduorum voting
-            # judicial ruling
-    # every 2 years
-        if i % 2 == 0:
-        # voters vote for the senators from their state
-            for i_1 in voters:
-                for i_2 in range(2):
-                    avgvote = 0
-                    s_votes.append(i_1.s_voting())
-                    for i_3 in s_votes:
-                        avgvote += i_3
-                    avgvote = int(avgvote / len(s_votes))
-                    senator = Senator(avgvote)
-                    senators.append(senator)
-                    s_votes.clear
-    # every 4 years
-        if i % 4 == 0:
-        # voters vote for the conciduorum members
-            for i_1 in voters:
-                cs_votes.append(i_1.cs_voting())
-                cd_votes.append(i_1.cd_voting())
-    # every 6 years
-        if i % 6 == 0:
-        # voters vote for the HOR reps from their state
-            for i_1 in voters:
-                for i_2 in range(REPS_PER_STATE.get(STATES.get(i_1.state))):
-                    avgvote = 0
-                    r_votes.append(i_1.r_voting())
-                    for i_3 in r_votes:
-                        avgvote += i_3
-                    avgvote = int(avgvote / len(s_votes))
-                    representative = Representative(avgvote)
-                    reps.append(representative)
-                    r_votes.clear()
-        if year == YEARS - 1:
-            loop = False
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
-
+        if event.type == KEYDOWN:
+            if event.key == K_SPACE:
+                year += 1
+                if year > 1: pygame.draw.rect(WINDOW, (0,0,0), year_rect)
+                year_obj = font.render(str(year), False, (255,255,255))
+                year_rect = year_obj.get_rect()
+                year_rect.topleft = (215,215)
+                WINDOW.blit(year_obj, year_rect)
+                # every year
+                    # lawmaking
+                        # house voting
+                        # senate voting
+                        # conciduorum voting
+                        # judicial ruling
+                # every 2 years
+                if i % 2 == 0:
+                    # voters vote for the senators from their state
+                    for i_1 in voters:
+                        for i_2 in range(2):
+                            avgvote = 0
+                            s_votes.append(i_1.s_voting())
+                            for i_3 in s_votes: avgvote += i_3
+                            avgvote = int(avgvote / len(s_votes))
+                            senator = Senator(avgvote)
+                            senators.append(senator)
+                            s_votes.clear
+                # every 4 years
+                if i % 4 == 0:
+                    # voters vote for the conciduorum members
+                    for i_1 in voters:
+                        cs_votes.append(i_1.cs_voting())
+                        cd_votes.append(i_1.cd_voting())
+                # every 6 years
+                if i % 6 == 0:
+                    # voters vote for the HOR reps from their state
+                    for i_1 in voters:
+                        for i_2 in range(REPS_PER_STATE.get(STATES.get(i_1.state))):
+                            avgvote = 0
+                            r_votes.append(i_1.r_voting())
+                            for i_3 in r_votes: avgvote += i_3
+                            avgvote = int(avgvote / len(s_votes))
+                            representative = Representative(avgvote)
+                            reps.append(representative)
+                            r_votes.clear()
     pygame.display.update()
     fps_clock.tick(30)
