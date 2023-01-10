@@ -44,22 +44,22 @@ year = 0
 DISPLAY_BG = pygame.image.load('display background.png')
 DISPLAY_KEY = pygame.image.load('display key.png')
 congress_avgpos_o, senate_avgpos_o, house_avgpos_o, conciduorum_avgpos_o, contrumsenatum_avgpos_o, contradomus_avgpos_o, with_parent_o, against_parent_o = 0, 0, 0, 0, 0, 0, 0, 0
-YEARLY_SENATE_POS_COORDS = ()
-YEARLY_HOUSE_POS_COORDS = ()
-YEARLY_CONGRESS_POS_COORDS = ()
-YEARLY_CS_POS_COORDS = ()
-YEARLY_CD_POS_COORDS = ()
-YEARLY_CONCID_POS_COORDS = ()
-OVERALL_SENATE_POS_COORDS = ()
-OVERALL_HOUSE_POS_COORDS = ()
-OVERALL_CONGRESS_POS_COORDS = ()
-OVERALL_CS_POS_COORDS = ()
-OVERALL_CD_POS_COORDS = ()
-OVERALL_CONCID_POS_COORDS = ()
-YEARLY_WITH_PARENT_COORDS = ()
-YEARLY_AGAINST_PARENT_COORDS = ()
-OVERALL_WITH_PARENT_COORDS = ()
-OVERALL_AGAINST_PARENT_COORDS = ()
+YEARLY_SENATE_POS_COORDS = (180,165)
+YEARLY_HOUSE_POS_COORDS = (180,320)
+YEARLY_CONGRESS_POS_COORDS = (180,65)
+YEARLY_CS_POS_COORDS = (400,165)
+YEARLY_CD_POS_COORDS = (400,320)
+YEARLY_CONCID_POS_COORDS = (400, 65)
+OVERALL_SENATE_POS_COORDS = (280,165)
+OVERALL_HOUSE_POS_COORDS = (280,320)
+OVERALL_CONGRESS_POS_COORDS = (280,65)
+OVERALL_CS_POS_COORDS = (520,165)
+OVERALL_CD_POS_COORDS = (520,320)
+OVERALL_CONCID_POS_COORDS = (520, 65)
+YEARLY_WITH_PARENT_COORDS = (20,125)
+YEARLY_AGAINST_PARENT_COORDS = (20,175)
+OVERALL_WITH_PARENT_COORDS = (20,250)
+OVERALL_AGAINST_PARENT_COORDS = (20,300)
 # output_coords = None
 # put the object-oriented reverse parliamentary system code here
 # congress
@@ -283,7 +283,12 @@ while loop == True:
                             owithparent_rect.topleft = OVERALL_WITH_PARENT_COORDS
                             against_parent_y = int(against_parent_y / len(voters))
                             temp = int(against_parent_o / (len(voters) * year))
-                            
+                            yagainstparent_obj = font.render(str(against_parent_y), False, (255,255,255))
+                            yagainstparent_rect = yagainstparent_obj.get_rect()
+                            yagainstparent_rect.topleft = YEARLY_AGAINST_PARENT_COORDS
+                            oagainstparent_obj = font.render(str(temp), False, (255,255,255))
+                            oagainstparent_rect = oagainstparent_obj.get_rect()
+                            oagainstparent_rect.topleft = OVERALL_AGAINST_PARENT_COORDS
                         # how many laws went through yearly/overall
                         # how many laws passed yearly/overall
                         # how many laws failed yearly/overall
