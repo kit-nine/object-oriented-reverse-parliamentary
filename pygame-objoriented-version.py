@@ -21,7 +21,7 @@ from pygame.locals import *
 pygame.init()
 #variables
 fps_clock = pygame.time.Clock()
-WINDOW = pygame.display.set_mode((500,500))
+WINDOW = pygame.display.set_mode((1109,515))
 YEARS = 1000
 grid = []
 temp = []
@@ -38,9 +38,11 @@ r_votes = []
 cd_votes = []
 senators = []
 reps = []
-font = pygame.font.Font(None, 70)
+font = pygame.font.Font(None, 50)
 loop = True
 year = 0
+DISPLAY_BG = pygame.image.load('display background.png')
+DISPLAY_KEY = pygame.image.load('display key.png')
 # output_coords = None
 # put the object-oriented reverse parliamentary system code here
 # congress
@@ -95,22 +97,23 @@ for cols in range(11):
 # output_coords = grid[(6 - Y) - 1][(6 + X) - 1]
 # create the voters
 for i in range(50):
-    for i_1 in range(VOTERS_PER_STATE):
-        voter = Voter(i, grid[(6 - skew(-5, 5)) - 1][(6 + skew(-5, 5)) - 1])
+    for i_1 in range(VOTERS_PER_STATE): voter = Voter(i, grid[(6 - skew(-5, 5)) - 1][(6 + skew(-5, 5)) - 1])
 # the display, using pygame
-WINDOW.fill((0,0,0))
+WINDOW.blit(DISPLAY_KEY, (0,0))
+
 while loop == True:
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
         if event.type == KEYDOWN:
+            if event.key == K_s: WINDOW.blit(DISPLAY_BG, (0,0))
             if event.key == K_SPACE:
                 year += 1
-                if year > 1: pygame.draw.rect(WINDOW, (0,0,0), year_rect)
+                if year > 1: pygame.draw.rect(WINDOW, (174,67,255), year_rect)
                 year_obj = font.render(str(year), False, (255,255,255))
                 year_rect = year_obj.get_rect()
-                year_rect.topleft = (215,215)
+                year_rect.topleft = (25,40)
                 WINDOW.blit(year_obj, year_rect)
                 # every year
                     # lawmaking
@@ -148,5 +151,6 @@ while loop == True:
                             representative = Representative(avgvote)
                             reps.append(representative)
                             r_votes.clear()
+
     pygame.display.update()
     fps_clock.tick(30)
