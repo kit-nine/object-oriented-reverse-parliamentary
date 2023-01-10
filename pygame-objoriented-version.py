@@ -275,18 +275,18 @@ while loop == True:
                             against_parent_o += against_parent_y
                             with_parent_y = int(with_parent_y / len(voters))
                             temp = int(with_parent_o / (len(voters) * year))
-                            ywithparent_obj = font.render(str(with_parent_y), False, (255,255,255))
+                            ywithparent_obj = font.render(str((100 * with_parent_y)) + "%", False, (255,255,255))
                             ywithparent_rect = ywithparent_obj.get_rect()
                             ywithparent_rect.topleft = YEARLY_WITH_PARENT_COORDS
-                            owithparent_obj = font.render(str(temp), False, (255,255,255))
+                            owithparent_obj = font.render(str((100 * temp)) + "%", False, (255,255,255))
                             owithparent_rect = owithparent_obj.get_rect()
                             owithparent_rect.topleft = OVERALL_WITH_PARENT_COORDS
                             against_parent_y = int(against_parent_y / len(voters))
                             temp = int(against_parent_o / (len(voters) * year))
-                            yagainstparent_obj = font.render(str(against_parent_y), False, (255,255,255))
+                            yagainstparent_obj = font.render(str((100 * against_parent_y)) + "%", False, (255,255,255))
                             yagainstparent_rect = yagainstparent_obj.get_rect()
                             yagainstparent_rect.topleft = YEARLY_AGAINST_PARENT_COORDS
-                            oagainstparent_obj = font.render(str(temp), False, (255,255,255))
+                            oagainstparent_obj = font.render(str((100 * temp)) + "%", False, (255,255,255))
                             oagainstparent_rect = oagainstparent_obj.get_rect()
                             oagainstparent_rect.topleft = OVERALL_AGAINST_PARENT_COORDS
                         # how many laws went through yearly/overall
@@ -297,8 +297,22 @@ while loop == True:
                         # how many laws were in the AL corner yearly/overall
                         # how many laws were in the AR corner yearly/overall
                         # how centrist (%) were the laws yearly/overall
-                    
-
-
+                # display everything we just rendered
+                WINDOW.blit(ysenatepos_obj, ysenatepos_rect)
+                WINDOW.blit(yhousepos_obj, yhousepos_rect)
+                WINDOW.blit(ycongresspos_obj, ycongresspos_rect)
+                WINDOW.blit(ycontrumsenatum_obj, ycontrumsenatum_rect)
+                WINDOW.blit(ycontradomus_obj, ycontradomus_rect)
+                WINDOW.blit(yconciduorum_obj, yconciduorum_rect)
+                WINDOW.blit(ywithparent_obj, ywithparent_rect)
+                WINDOW.blit(yagainstparent_obj, yagainstparent_rect)
+                WINDOW.blit(osenatepos_obj, osenatepos_rect)
+                WINDOW.blit(ohousepos_obj, ohousepos_rect)
+                WINDOW.blit(ocongresspos_obj, ocongresspos_rect)
+                WINDOW.blit(ocontrumsenatum_obj, ocontrumsenatum_rect)
+                WINDOW.blit(ocontradomus_obj, ocontradomus_rect)
+                WINDOW.blit(oconciduorum_obj, oconciduorum_rect)
+                WINDOW.blit(owithparent_obj, owithparent_rect)
+                WINDOW.blit(oagainstparent_obj, oagainstparent_rect)
     pygame.display.update()
     fps_clock.tick(30)
