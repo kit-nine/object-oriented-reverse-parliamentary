@@ -43,6 +43,23 @@ loop = True
 year = 0
 DISPLAY_BG = pygame.image.load('display background.png')
 DISPLAY_KEY = pygame.image.load('display key.png')
+congress_avgpos_o, senate_avgpos_o, house_avgpos_o, conciduorum_avgpos_o, contrumsenatum_avgpos_o, contradomus_avgpos_o, with_parent_o, against_parent_o = 0, 0, 0, 0, 0, 0, 0, 0
+YEARLY_SENATE_POS_COORDS = ()
+YEARLY_HOUSE_POS_COORDS = ()
+YEARLY_CONGRESS_POS_COORDS = ()
+YEARLY_CS_POS_COORDS = ()
+YEARLY_CD_POS_COORDS = ()
+YEARLY_CONCID_POS_COORDS = ()
+OVERALL_SENATE_POS_COORDS = ()
+OVERALL_HOUSE_POS_COORDS = ()
+OVERALL_CONGRESS_POS_COORDS = ()
+OVERALL_CS_POS_COORDS = ()
+OVERALL_CD_POS_COORDS = ()
+OVERALL_CONCID_POS_COORDS = ()
+YEARLY_WITH_PARENT_COORDS = ()
+YEARLY_AGAINST_PARENT_COORDS = ()
+OVERALL_WITH_PARENT_COORDS = ()
+OVERALL_AGAINST_PARENT_COORDS = ()
 # output_coords = None
 # put the object-oriented reverse parliamentary system code here
 # congress
@@ -50,15 +67,15 @@ class Senator():
     def __init__(self, pos):
         self.pos = pos
 class Representative():
-    def __init__(self):
-        pass
+    def __init__(self, pos):
+        self.pos = pos
 # conciduorum
 class ContraDomus():
-    def __init__(self):
-        pass
+    def __init__(self, pos):
+        self.pos = pos
 class ContrumSenatum():
-    def __init__(self):
-        pass
+    def __init__(self, pos):
+        self.pos = pos
 # supreme court
 class Justice():
     def __init__(self):
@@ -75,14 +92,15 @@ class Voter():
         self.cd_vote = None # this voter's vote for the contra domus
         self.state = state # the state they're from
         self.pos = pos # their position, used for skewing their vote
+        self.parent = None # whether this voter votes with or against their parent
     def s_voting(self): # vote for the senators from the voter's state
         self.s_vote = skew(self.pos - 1, self.pos + 1)
     def cs_voting(self): # vote for the contrum senatum
-        pass
+        self.cs_vote = skew(self.pos - 1, self.pos + 1)
     def r_voting(self): # vote for the reps from the voter's state
-        pass
+        self.r_vote = skew(self.pos - 1, self.pos + 1)
     def cd_voting(self): # vote for the contra domus
-        pass
+        self.cd_vote = skew(self.pos - 1, self.pos + 1)
 # FUNCTIONSs
 # randomness skew function
 def skew(min, max): # both min and max are inclusive
@@ -108,6 +126,7 @@ while loop == True:
             sys.exit()
         if event.type == KEYDOWN:
             if event.key == K_s: WINDOW.blit(DISPLAY_BG, (0,0))
+            if event.key == K_k: WINDOW.blit(DISPLAY_KEY, (0,0))
             if event.key == K_SPACE:
                 year += 1
                 if year > 1: pygame.draw.rect(WINDOW, (174,67,255), year_rect)
@@ -115,12 +134,6 @@ while loop == True:
                 year_rect = year_obj.get_rect()
                 year_rect.topleft = (25,40)
                 WINDOW.blit(year_obj, year_rect)
-                # every year
-                    # lawmaking
-                        # house voting
-                        # senate voting
-                        # conciduorum voting
-                        # judicial ruling
                 # every 2 years
                 if i % 2 == 0:
                     # voters vote for the senators from their state
@@ -138,7 +151,15 @@ while loop == True:
                     # voters vote for the conciduorum members
                     for i_1 in voters:
                         cs_votes.append(i_1.cs_voting())
+                        avgvote = 0
+                        for i_2 in cs_votes: avgvote += i_2
+                    avgvote = int(avgvote / len(s_votes))
+                    contrum_senatum = ContrumSenatum(avgvote)
+                    for i_1 in voters:
                         cd_votes.append(i_1.cd_voting())
+                        for i_2 in cd_votes: avgvote += i_2
+                    avgvote = int(avgvote / len(s_votes))
+                    contra_domus = ContraDomus(avgvote)
                 # every 6 years
                 if i % 6 == 0:
                     # voters vote for the HOR reps from their state
@@ -151,6 +172,128 @@ while loop == True:
                             representative = Representative(avgvote)
                             reps.append(representative)
                             r_votes.clear()
+                # every year
+                    # lawmaking
+                        # house voting
+                        # senate voting
+                        # conciduorum voting
+                        # judicial ruling
+                    # if year > 1 make new voters
+                    if year > 1:
+                        for i in voters:
+                            temp = skew(0,1)
+                            if temp == 0:
+                                new_voter_pos = i.pos
+                                i.parent = "w"
+                            else:
+                                new_voter_pos = (-(i.pos[0]), -(i.pos[1]))
+                                i.parent = "a"
+                            Voter(i.state, new_voter_pos)
+                    # display:
+                        # yearly/overall congress avgpos
+                        congress_avgpos_y = 0
+                        # yearly/overall senate avgpos
+                        senate_avgpos_y = 0
+                        for i in senators:
+                            congress_avgpos_y += i.pos
+                            senate_avgpos_y += i.pos
+                            congress_avgpos_o += i.pos
+                            senate_avgpos_o += i.pos
+                        senate_avgpos_y = int(senate_avgpos_y / 100)
+                        temp = int(senate_avgpos_o / (100 * year))
+                        ysenatepos_obj = font.render(str(senate_avgpos_y), False, (255,255,255))
+                        ysenatepos_rect = ysenatepos_obj.get_rect()
+                        ysenatepos_rect.topleft = YEARLY_SENATE_POS_COORDS
+                        osenatepos_obj = font.render(str(temp), False, (255,255,255))
+                        osenatepos_rect = osenatepos_obj.get_rect()
+                        osenatepos_rect.topleft = OVERALL_SENATE_POS_COORDS
+                        # yearly/overall house avgpos
+                        house_avgpos_y = 0
+                        for i in reps:
+                            congress_avgpos_y += i.pos
+                            house_avgpos_y += i.pos
+                            congress_avgpos_o += i.pos
+                            house_avgpos_o += i.pos
+                        house_avgpos_y = int(house_avgpos_y / 435)
+                        temp = int(house_avgpos_o / (435 * year))
+                        yhousepos_obj = font.render(str(house_avgpos_y), False, (255,255,255))
+                        yhousepos_rect = yhousepos_obj.get_rect()
+                        yhousepos_rect.topleft = YEARLY_HOUSE_POS_COORDS
+                        ohousepos_obj = font.render(str(temp), False, (255,255,255))
+                        ohousepos_rect = ohousepos_obj.get_rect()
+                        ohousepos_rect.topleft = OVERALL_HOUSE_POS_COORDS
+                        congress_avgpos_y = int(congress_avgpos_y / 535)
+                        temp = int(congress_avgpos_o / (535 * year))
+                        ycongresspos_obj = font.render(str(congress_avgpos_y), False, (255,255,255))
+                        ycongresspos_rect = ycongresspos_obj.get_rect()
+                        ycongresspos_rect.topleft = YEARLY_CONGRESS_POS_COORDS
+                        ocongresspos_obj = font.render(str(congress_avgpos_o), False, (255,255,255))
+                        ocongresspos_rect = ocongresspos_obj.get_rect()
+                        ocongresspos_rect.topleft = OVERALL_CONGRESS_POS_COORDS
+                        # yearly/overall conciduorum avgpos
+                        conciduorum_avgpos_y = 0
+                        # yearly/overall contrum senatum avgpos
+                        contrumsenatum_avgpos_y = contrum_senatum.pos
+                        conciduorum_avgpos_y += contrum_senatum.pos
+                        conciduorum_avgpos_o += contrum_senatum.pos
+                        contrumsenatum_avgpos_o += contrum_senatum.pos
+                        ycontrumsenatum_obj = font.render(str(contrumsenatum_avgpos_y), False, (255,255,255))
+                        ycontrumsenatum_rect = ycontrumsenatum_obj.get_rect()
+                        ycontrumsenatum_rect.topleft = YEARLY_CS_POS_COORDS
+                        ocontrumsenatum_obj = font.render(str(contrumsenatum_avgpos_o), False, (255,255,255))
+                        ocontrumsenatum_rect = ocontrumsenatum_obj.get_rect()
+                        ocontrumsenatum_rect.topleft = OVERALL_CS_POS_COORDS
+                        # yearly/overall contra domus avgpos
+                        contradomus_avgpos_y = contra_domus.pos
+                        conciduorum_avgpos_y += contra_domus.pos
+                        conciduorum_avgpos_o += contra_domus.pos
+                        contradomus_avgpos_o += contra_domus.pos
+                        ycontradomus_obj = font.render(str(contradomus_avgpos_y), False, (255,255,255))
+                        ycontradomus_rect = ycontradomus_obj.get_rect()
+                        ycontradomus_rect.topleft = YEARLY_CD_POS_COORDS
+                        ocontradomus_obj = font.render(str(contradomus_avgpos_o), False, (255,255,255))
+                        ocontradomus_rect = ocontradomus_obj.get_rect()
+                        ocontradomus_rect.topleft = YEARLY_CD_POS_COORDS
+                        conciduorum_avgpos_y = int(conciduorum_avgpos_y / 2)
+                        temp = int(conciduorum_avgpos_o / (2 * year))
+                        yconciduorum_obj = font.render(str(conciduorum_avgpos_y), False, (255,255,255))
+                        yconciduorum_rect = yconciduorum_obj.get_rect()
+                        yconciduorum_rect.topleft = YEARLY_CONCID_POS_COORDS
+                        oconciduorum_obj = font.render(str(temp), False, (255,255,255))
+                        oconciduorum_rect = oconciduorum_obj.get_rect()
+                        oconciduorum_rect.topleft = OVERALL_CONCID_POS_COORDS
+                        # if not year 1:
+                        if year > 1:
+                            # what % of voters voted with their parent yearly/overall
+                            with_parent_y = 0
+                            # what % of voters voted against their parent yearly/overall
+                            against_parent_y = 0
+                            for i in voters:
+                                if i.parent == "w": with_parent_y += 1
+                                else: against_parent_y += 1
+                            with_parent_o += with_parent_y
+                            against_parent_o += against_parent_y
+                            with_parent_y = int(with_parent_y / len(voters))
+                            temp = int(with_parent_o / (len(voters) * year))
+                            ywithparent_obj = font.render(str(with_parent_y), False, (255,255,255))
+                            ywithparent_rect = ywithparent_obj.get_rect()
+                            ywithparent_rect.topleft = YEARLY_WITH_PARENT_COORDS
+                            owithparent_obj = font.render(str(temp), False, (255,255,255))
+                            owithparent_rect = owithparent_obj.get_rect()
+                            owithparent_rect.topleft = OVERALL_WITH_PARENT_COORDS
+                            against_parent_y = int(against_parent_y / len(voters))
+                            temp = int(against_parent_o / (len(voters) * year))
+                            
+                        # how many laws went through yearly/overall
+                        # how many laws passed yearly/overall
+                        # how many laws failed yearly/overall
+                        # how many laws were in the LL corner yearly/overall
+                        # how many laws were in the LR corner yearly/overall
+                        # how many laws were in the AL corner yearly/overall
+                        # how many laws were in the AR corner yearly/overall
+                        # how centrist (%) were the laws yearly/overall
+                    
+
 
     pygame.display.update()
     fps_clock.tick(30)
