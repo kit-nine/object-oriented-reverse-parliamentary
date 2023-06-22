@@ -22,8 +22,6 @@ pygame.init()
 
 # variables
 fps_clock = pygame.time.Clock()
-X = -4
-Y = -3
 voters = []
 senators = []
 reps = []
@@ -31,20 +29,18 @@ contra_domus = None
 contrum_senatum = None
 all_bills = []
 font = pygame.font.Font(None, 50)
-loop = True
 year = 0
 reps_avg_pos = (0, 0)
 # constants
-#WINDOW = pygame.display.set_mode((1109,515))
 YEARS = 1000 # Testing should use 10 or 100, but normally at least 1000 should be run to get accurate results
 VOTERS_PER_STATE = 200 # Default: 200
 STATES = {0:"AK",1:"AL",2:"AR",3:"AZ",4:"CA",5:"CO",6:"CT",7:"DE",8:"FL",9:"GA",10:"HI",11:"IA",12:"ID",13:"IL",14:"IN",15:"KS",16:"KY",17:"LA",18:"MA",19:"MD",20:"ME",21:"MI",22:"MN",23:"MO",24:"MS",25:"MT",26:"NC",27:"ND",28:"NE",29:"NH",30:"NJ",31:"NM",32:"NV",33:"NY",34:"OH",35:"OK",36:"OR",37:"PA",38:"RI",39:"SC",40:"SD",41:"TN",42:"TX",43:"UT",44:"VA",45:"VT",46:"WA",47:"WI",48:"WV",49:"WY"}
 REPS_PER_STATE = {"AK":1,"AL":7,"AR":4,"AZ":9,"CA":53,"CO":7,"CT":5,"DE":1,"FL":27,"GA":14,"HI":2,"IA":4,"ID":2,"IL":18,"IN":9,"KS":4,"KY":6,"LA":6,"MA":9,"MD":8,"ME":2,"MI":14,"MN":8,"MO":8,"MS":4,"MT":1,"NC":13,"ND":1,"NE":3,"NH":2,"NJ":12,"NM":3,"NV":4,"NY":27,"OH":16,"OK":5,"OR":5,"PA":18,"RI":2,"SC":7,"SD":1,"TN":9,"TX":36,"UT":4,"VA":11,"VT":1,"WA":10,"WI":8,"WV":3,"WY":1}
 SKEW = 0 # Default: 0 (float from -1 to 1, inclusive)
 SKEW_DISTANCE = 1 # Default: 1 (positive non-zero integer)
-DISPLAY_BG = pygame.image.load('display background.png')
-DISPLAY_KEY = pygame.image.load('display key.png')
-DISPLAY_COORDS = [(180,165), (180,320), (180,65), (400,165), (400,320), (400, 65), (280,165), (280,320), (280,65), (520,165), (520,320), (520, 65), (20,125), (20,175), (20,250), (20,300)]
+WINDOW = pygame.display.set_mode((625,500))
+NUM_OF_COMPASSES = 2                                                                                # the SQUARE ROOT of the number of compasses to display - displays in a square
+DISTANCE_BETWEEN_LINES = (min(WINDOW.get_height(), WINDOW.get_width())) / (10 * NUM_OF_COMPASSES)   # distance between lines on the compass grid
 # congress
 class Senator():
     def __init__(self, pos, gen, state):
@@ -79,19 +75,19 @@ class Voter():
     def __init__(self, state, pos, gen, compass):
         global SKEW
         global SKEW_DISTANCE
+        self.pos = pos # their position, used for skewing their vote
+        self.skew_params_0 = self.find_skew_params(self.pos[0], SKEW_DISTANCE)
+        self.skew_params_1 = self.find_skew_params(self.pos[1], SKEW_DISTANCE)
         self.s_vote = self.voting() # this voter's vote for the senators from their state
         self.cs_vote = self.voting() # this voter's vote for the contrum senatum
         self.r_vote = self.voting() # this voter's vote for the reps from their state
         self.cd_vote = self.voting() # this voter's vote for the contra domus
         self.state = STATES.get(state) # the state they're from
-        self.pos = pos # their position, used for skewing their vote
         self.parent = None # whether this voter votes with or against their parent
         self.skew = skew
         self.generation = gen
-        self.skew_params_0 = self.find_skew_params(self.pos[0], SKEW_DISTANCE)
-        self.skew_params_1 = self.find_skew_params(self.pos[1], SKEW_DISTANCE)
         self.compass = compass
-    def voting(self): # vote for the contra domus
+    def voting(self): # vote
         return (skew(self.skew_params_0[0], self.skew_params_0[1]), skew(self.skew_params_1[0], self.skew_params_1[1]))
     def reproduce(self):
         child = Voter(self.state, self.compass[(6 - skew(self.skew_params_0[0], self.skew_params_0[1]) - 1)][6 + skew(self.skew_params_1[0], self.skew_params_1[1]) - 1], self.generation + 1)
@@ -127,7 +123,6 @@ def create_gen_1(VOTERS_PER_STATE, compass, voters):
             voters.append(voter)
 # vote for reps
 def reps_voting():
-    for i in voters: i.r_voting()
     for i in range(50):
         state = STATES.get(i)
         rep_pos = (0,0)
@@ -139,21 +134,20 @@ def reps_voting():
 # vote for contra domus
 def contradomus_voting():
     cd_pos = (0,0)
-    for i in reps: reps_avg_pos = (reps_avg_pos[0] + i.pos[0], reps_avg_pos + i.pos[1])
+    reps_avg_pos = (0,0)
+    for i in reps: reps_avg_pos = (reps_avg_pos[0] + i.pos[0], reps_avg_pos[1] + i.pos[1])
     reps_avg_pos = (reps_avg_pos[0] / len(reps), reps_avg_pos[1] / len(reps))
     for i in voters:
-        i.cd_voting()
         i.cd_vote = (int((i.cd_vote[0] + 5) / 2), int((i.cd_vote[0] + 5) / 2))
         if reps_avg_pos[0] >= 0 and reps_avg_pos[1] >= 0: i.cd_vote = (i.cd_vote[0] * -1, i.cd_vote[1] * -1)
         elif reps_avg_pos[0] <= 0 and reps_avg_pos[1] >= 0: i.cd_vote = (i.cd_vote[0], i.cd_vote[1] * -1)
         elif reps_avg_pos[0] >= 0 and reps_avg_pos[1] <= 0: i.cd_vote = (i.cd_vote[0] * -1, i.cd_vote[1])
-    cd_pos = (cd_pos + i.cd_vote[0], cd_pos + i.cd_vote[1])
-    cs_pos = (cs_pos[0] / len(voters), cs_pos[1] / len(voters))
-    contra_domus = ContraDomus(cd_pos)
+    cd_pos = (cd_pos[0] + i.cd_vote[0], cd_pos[1] + i.cd_vote[1])
+    cd_pos = (cd_pos[0] / len(voters), cd_pos[1] / len(voters))
+    contra_domus = ContraDomus(cd_pos, year + 1)
     return contra_domus
 # vote for senate
 def senate_voting():
-    for i in voters: i.s_voting()
     for i in range(50):
         state = STATES.get(i)
         sen_pos = (0,0)
@@ -161,20 +155,21 @@ def senate_voting():
             for k in range(VOTERS_PER_STATE): sen_pos = (sen_pos[0] + voters[k].s_vote[0], sen_pos[1] + voters[i * j].s_vote[1])
             sen_pos = (int(sen_pos[0] / VOTERS_PER_STATE), int(sen_pos[1] / VOTERS_PER_STATE))
             sen = Senator(sen_pos, year + 1, state)
-            senators.appen(sen)
+            senators.append(sen)
 # vote for contrum senatum
 def contrumsenatum_voting():
     cs_pos = (0,0)
+    sens_avg_pos = (0,0)
     for i in senators: sens_avg_pos = (sens_avg_pos[0] + i.pos[0], sens_avg_pos[1] + i.pos[1])
     sens_avg_pos = (sens_avg_pos[0] / len(senators), sens_avg_pos[1] / len(senators))
     for i in voters:
-        i.cs_voting()
-        i.cs_vote = (int((i.cs_cote[0] + 5) / 2), int((i.cs_vote[0] + 5) / 2))
+        i.cs_vote = (int((i.cs_vote[0] + 5) / 2), int((i.cs_vote[0] + 5) / 2))
         if sens_avg_pos[0] >= 0 and sens_avg_pos[1] >= 0: i.cs_vote = (i.cs_vote[0] * -1, i.cs_vote[1] * -1)
         elif sens_avg_pos[0] <= 0 and sens_avg_pos[1] >= 0: i.cs_vote = (i.cs_vote[0], i.cs_vpte[1] * -1)
         elif sens_avg_pos[0] >= 0 and sens_avg_pos[1] <= 0: i.cs_vote = (i.cs_vote[0] * -1, i.cs_vote[1])
-    cs_pos = (cs_pos + i.cs_pos[0], cs_pos + i.cs_vote[1])
+    cs_pos = (cs_pos[0] + i.cs_vote[0], cs_pos[1] + i.cs_vote[1])
     cs_pos = (cs_pos[0] / len(voters), cs_pos[1] / len(voters))
+    contrum_senatum = ContrumSenatum(cs_pos, year + 1)
 # lawmaking (overall)
 def lawmaking(bills):
     bill = bill_creation()
@@ -354,4 +349,34 @@ def year_type_6(reps, senators, contra_domus, contrum_senatum): # old reps leave
     # lawmaking
 
 year_type_0(reps, senators, contra_domus, contrum_senatum)
+
 # the display, using pygame
+
+compass = create_compass()
+
+while True:
+    WINDOW.fill((0,0,0))
+    # draw the grid
+    for col in range(0, (len(compass) - 1) * NUM_OF_COMPASSES):
+        thickness = 1
+        for i in range(NUM_OF_COMPASSES):
+            num1 = 4 + (10 * i)
+            num2 = 9 + (10 * (i - 1))
+            if col == num1: thickness = 2
+            elif col == num2: thickness = 5
+        pygame.draw.line(WINDOW, (255,255,255), ((DISTANCE_BETWEEN_LINES * (col + 1)), 0), ((DISTANCE_BETWEEN_LINES * (col + 1)), 500), thickness)
+    for row in range(0, (len(compass) - 1) * NUM_OF_COMPASSES):
+        thickness = 1
+        for i in range(NUM_OF_COMPASSES):
+            num1 = 4 + (10 * i)
+            num2 = 9 + (10 * (i - 1))
+            if row == num1: thickness = 2
+            elif row == num2: thickness = 5
+        pygame.draw.line(WINDOW, (255,255,255), (0, (DISTANCE_BETWEEN_LINES * (row + 1))), (500, (DISTANCE_BETWEEN_LINES * (row + 1))), thickness)
+    # draw the lines
+    
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+            sys.exit()
+    pygame.display.update()
